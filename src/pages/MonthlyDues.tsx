@@ -15,28 +15,38 @@ import { CriticalOverdueReport } from "@/components/treasury/CriticalOverdueRepo
 import { PersonalPayments } from "@/components/treasury/PersonalPayments";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
 
 const MonthlyDues = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("personal");
   
-  const { data: isAdmin, isLoading } = useQuery({
-    queryKey: ["is-admin"],
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) return null;
 
-      const { data, error } = await supabase.rpc("is_admin");
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
       if (error) {
-        console.error("Erro ao verificar admin:", error);
-        return false;
+        console.error("Erro ao buscar perfil:", error);
+        return null;
       }
-      return data || false;
+
+      return data;
     }
   });
 
-  if (isLoading) {
-    return <div>Carregando...</div>;
+  const isAdmin = profile?.role === 'admin';
+
+  // Se não for admin e tentar acessar abas restritas, volta para "personal"
+  if (!isAdmin && selectedTab !== "personal") {
+    setSelectedTab("personal");
   }
 
   return (
@@ -48,7 +58,7 @@ const MonthlyDues = () => {
         <h1 className="text-2xl font-semibold">Tesouraria</h1>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
         <TabsList className="w-full">
           <TabsTrigger value="personal">Minhas Mensalidades</TabsTrigger>
           {isAdmin && (
@@ -60,21 +70,21 @@ const MonthlyDues = () => {
           )}
         </TabsList>
 
-        <TabsContent value="personal" className="mt-6">
+        <TabsContent value="personal">
           <PersonalPayments />
         </TabsContent>
 
         {isAdmin && (
           <>
-            <TabsContent value="register" className="mt-6">
+            <TabsContent value="register">
               <PaymentForm />
             </TabsContent>
 
-            <TabsContent value="overdue" className="mt-6">
+            <TabsContent value="overdue">
               <OverdueList />
             </TabsContent>
 
-            <TabsContent value="critical" className="mt-6">
+            <TabsContent value="critical">
               <CriticalOverdueReport />
             </TabsContent>
           </>

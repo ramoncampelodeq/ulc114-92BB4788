@@ -43,6 +43,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "attendance_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "attendance_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -168,6 +175,13 @@ export type Database = {
             referencedRelation: "brothers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "monthly_dues_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -230,6 +244,13 @@ export type Database = {
             referencedRelation: "brothers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "relatives_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sessions: {
@@ -282,6 +303,15 @@ export type Database = {
           solidarity_trunk_total: number | null
           total_balance: number | null
           year: number | null
+        }
+        Relationships: []
+      }
+      critical_overdue_brothers: {
+        Row: {
+          id: string | null
+          latest_due_date: string | null
+          name: string | null
+          overdue_count: number | null
         }
         Relationships: []
       }

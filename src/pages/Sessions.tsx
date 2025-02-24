@@ -47,9 +47,16 @@ const Sessions = () => {
 
   const handleCreateSession = async (data: SessionFormData) => {
     try {
-      const { error } = await supabase.from("sessions").insert([data]);
+      console.log("Creating session with data:", data); // Debug log
+      
+      const { error } = await supabase
+        .from("sessions")
+        .insert([data]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating session:", error); // Debug log
+        throw error;
+      }
 
       toast({
         title: "Sessão criada com sucesso!",
@@ -57,6 +64,7 @@ const Sessions = () => {
       
       refetch();
     } catch (error: any) {
+      console.error("Error in handleCreateSession:", error); // Debug log
       toast({
         variant: "destructive",
         title: "Erro ao criar sessão",

@@ -42,6 +42,7 @@ export function SessionForm({
       agenda: formData.get("agenda") as string,
     };
 
+    console.log("Form data being submitted:", data); // Debug log
     await onSubmit(data);
     onClose();
   };
@@ -83,6 +84,7 @@ export function SessionForm({
               <Select 
                 name="degree" 
                 defaultValue={session?.degree || "aprendiz"}
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o grau" />

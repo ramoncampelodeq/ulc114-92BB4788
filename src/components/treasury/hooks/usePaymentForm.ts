@@ -46,6 +46,7 @@ export function usePaymentForm() {
         .rpc('is_admin');
 
       if (adminCheckError) {
+        console.error('Erro ao verificar admin:', adminCheckError);
         throw new Error("Erro ao verificar permissões do usuário");
       }
 

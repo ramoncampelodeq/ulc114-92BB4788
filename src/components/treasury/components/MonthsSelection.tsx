@@ -20,24 +20,39 @@ const months: Month[] = [
 
 interface MonthsSelectionProps {
   selectedMonths: number[];
+  paidMonths: number[];
   onMonthToggle: (month: number) => void;
 }
 
-export function MonthsSelection({ selectedMonths, onMonthToggle }: MonthsSelectionProps) {
+export function MonthsSelection({ 
+  selectedMonths, 
+  paidMonths, 
+  onMonthToggle 
+}: MonthsSelectionProps) {
   return (
     <div className="grid gap-2">
       <Label>Meses</Label>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {months.map((month) => (
-          <div key={month.value} className="flex items-center space-x-2">
-            <Checkbox
-              id={`month-${month.value}`}
-              checked={selectedMonths.includes(month.value)}
-              onCheckedChange={() => onMonthToggle(month.value)}
-            />
-            <Label htmlFor={`month-${month.value}`}>{month.label}</Label>
-          </div>
-        ))}
+        {months.map((month) => {
+          const isPaid = paidMonths.includes(month.value);
+          return (
+            <div key={month.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`month-${month.value}`}
+                checked={selectedMonths.includes(month.value) || isPaid}
+                onCheckedChange={() => onMonthToggle(month.value)}
+                disabled={isPaid}
+              />
+              <Label 
+                htmlFor={`month-${month.value}`}
+                className={isPaid ? "text-muted-foreground" : ""}
+              >
+                {month.label}
+                {isPaid && " (Pago)"}
+              </Label>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

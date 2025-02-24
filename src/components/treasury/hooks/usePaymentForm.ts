@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { PaymentFormData } from "../types";
 import type { Database } from "@/integrations/supabase/types";
@@ -18,10 +18,38 @@ export function usePaymentForm() {
   const [isPaid, setIsPaid] = useState(false);
   const [paidAt, setPaidAt] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [paidMonths, setPaidMonths] = useState<number[]>([]);
+
+  // Buscar pagamentos existentes quando o irmão ou ano for alterado
+  useEffect(() => {
+    const fetchExistingPayments = async () => {
+      if (!selectedBrotherId || !selectedYear) return;
+
+      try {
+        const { data: payments, error } = await supabase
+          .from("monthly_dues")
+          .select("month")
+          .eq("brother_id", selectedBrotherId)
+          .eq("year", selectedYear)
+          .not("status", "eq", "overdue");
+
+        if (error) throw error;
+
+        // Atualizar os meses já pagos
+        setPaidMonths(payments?.map(p => p.month) || []);
+      } catch (error) {
+        console.error("Erro ao buscar pagamentos existentes:", error);
+        toast.error("Erro ao verificar pagamentos existentes");
+      }
+    };
+
+    fetchExistingPayments();
+  }, [selectedBrotherId, selectedYear]);
 
   const resetForm = () => {
     setSelectedBrotherId("");
     setSelectedMonths([]);
+    setPaidMonths([]);
     setSelectedYear(new Date().getFullYear().toString());
     setAmount("100");
     setIsPaid(false);
@@ -153,6 +181,7 @@ export function usePaymentForm() {
     setPaidAt,
     selectedMonths,
     setSelectedMonths,
+    paidMonths,
     createPaymentMutation,
   };
 }

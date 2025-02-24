@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import { MonthsSelection } from "./components/MonthsSelection";
@@ -30,6 +30,7 @@ export function PaymentForm() {
     setPaidAt,
     selectedMonths,
     setSelectedMonths,
+    paidMonths,
     createPaymentMutation,
   } = usePaymentForm();
 
@@ -67,6 +68,8 @@ export function PaymentForm() {
   };
 
   const handleMonthToggle = (month: number) => {
+    if (paidMonths.includes(month)) return; // Não permite alteração em meses já pagos
+    
     setSelectedMonths(current =>
       current.includes(month)
         ? current.filter(m => m !== month)
@@ -95,6 +98,7 @@ export function PaymentForm() {
 
         <MonthsSelection
           selectedMonths={selectedMonths}
+          paidMonths={paidMonths}
           onMonthToggle={handleMonthToggle}
         />
 

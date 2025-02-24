@@ -67,31 +67,30 @@ export function BrotherDialog({
                 required
               />
             </div>
+            {/* Agora mostramos a seleção de role mesmo ao editar */}
+            <div className="grid gap-2">
+              <Label htmlFor="role">Tipo de Usuário</Label>
+              <Select name="role" defaultValue="brother">
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="brother">Usuário Normal</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {!selectedBrother && (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="role">Tipo de Usuário</Label>
-                  <Select name="role" defaultValue="brother">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="brother">Usuário Normal</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minLength={6}
+                />
+              </div>
             )}
             <div className="grid gap-2">
               <Label htmlFor="profession">Profissão</Label>

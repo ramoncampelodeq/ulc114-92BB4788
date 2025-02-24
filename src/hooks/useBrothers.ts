@@ -43,12 +43,22 @@ export function useBrothers() {
 
     try {
       if (selectedBrother) {
-        const { error } = await supabase
+        // Ao editar, também atualizamos o papel do usuário
+        const { error: brotherError } = await supabase
           .from('brothers')
           .update(brotherData)
           .eq('id', selectedBrother.id);
 
-        if (error) throw error;
+        if (brotherError) throw brotherError;
+
+        // Atualizar o papel do usuário no perfil
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ role: formData.get('role') })
+          .eq('id', selectedBrother.id);
+
+        if (profileError) throw profileError;
+
         toast.success('Irmão atualizado com sucesso');
       } else {
         const password = formData.get('password') as string;

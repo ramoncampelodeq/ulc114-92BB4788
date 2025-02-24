@@ -13,6 +13,7 @@ import { PaymentForm } from "@/components/treasury/PaymentForm";
 import { OverdueList } from "@/components/treasury/OverdueList";
 import { CriticalOverdueReport } from "@/components/treasury/CriticalOverdueReport";
 import { PersonalPayments } from "@/components/treasury/PersonalPayments";
+import { CashControl } from "@/components/treasury/cash/CashControl";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
@@ -78,6 +79,7 @@ const Treasury = () => {
               <TabsTrigger value="register">Cadastrar Pagamento</TabsTrigger>
               <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
               <TabsTrigger value="critical">Relatório Crítico</TabsTrigger>
+              <TabsTrigger value="cash">Controle de Caixa</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -98,6 +100,10 @@ const Treasury = () => {
 
             <TabsContent value="critical">
               <CriticalOverdueReport />
+            </TabsContent>
+
+            <TabsContent value="cash">
+              <CashControl />
             </TabsContent>
           </>
         )}

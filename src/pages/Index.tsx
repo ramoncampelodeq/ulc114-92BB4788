@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Brother, BrotherFormData } from "@/types/brother";
 import BrotherList from "@/components/brothers/BrotherList";
@@ -9,14 +8,34 @@ import { useToast } from "@/components/ui/use-toast";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import TreasuryReport from "@/components/reports/TreasuryReport";
 import AttendanceReport from "@/components/reports/AttendanceReport";
-import { fetchBrothers, fetchSessions, fetchAttendance, fetchMonthlyDues, createBrother, updateBrother } from "@/lib/supabase";
+import { fetchBrothers, fetchSessions, fetchAttendance, fetchMonthlyDues, createBrother, updateBrother, supabase } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [editingBrother, setEditingBrother] = useState<Brother | undefined>();
-  const [isAddingBrother, setIsAddingBrother] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   // Fetch data using React Query
   const { data: brothers = [] } = useQuery({
@@ -38,6 +57,9 @@ const Index = () => {
     queryKey: ['monthly-dues'],
     queryFn: fetchMonthlyDues,
   });
+
+  const [editingBrother, setEditingBrother] = useState<Brother | undefined>();
+  const [isAddingBrother, setIsAddingBrother] = useState(false);
 
   const handleAddBrother = async (data: BrotherFormData) => {
     try {
@@ -112,70 +134,76 @@ const Index = () => {
   });
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="page-header">ULC 114 Management System</h1>
-
-      {isAddingBrother ? (
-        <div className="max-w-4xl mx-auto">
-          <h2 className="section-header">Add New Brother</h2>
-          <BrotherForm
-            onSubmit={handleAddBrother}
-            onCancel={() => setIsAddingBrother(false)}
-          />
+    <div className="min-h-screen bg-background">
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-serif text-primary font-semibold">ULC 114</h1>
+          <Button 
+            variant="ghost" 
+            onClick={async () => {
+              try {
+                await supabase.auth.signOut();
+                navigate('/auth');
+              } catch (error) {
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Failed to sign out. Please try again.",
+                });
+              }
+            }}
+          >
+            Sign Out
+          </Button>
         </div>
-      ) : editingBrother ? (
-        <div className="max-w-4xl mx-auto">
-          <h2 className="section-header">Edit Brother</h2>
-          <BrotherForm
-            brother={editingBrother}
-            onSubmit={handleUpdateBrother}
-            onCancel={() => setEditingBrother(undefined)}
-          />
+      </header>
+
+      <main className="container mx-auto py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 lg:w-[600px] mx-auto">
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="brothers">Brothers</TabsTrigger>
+              <TabsTrigger value="birthdays">Birthdays</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="treasury">Treasury</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard" className="mt-6">
+              <AdminDashboard
+                brothers={brothers}
+                sessions={sessions}
+                payments={paymentRecords}
+                attendance={attendanceRecords}
+                onAddBrother={() => setIsAddingBrother(true)}
+                onAddSession={() => {}}
+                onManageAttendance={() => {}}
+                onManagePayments={() => {}}
+              />
+            </TabsContent>
+
+            <TabsContent value="brothers" className="mt-6">
+              <BrotherList
+                brothers={brothers}
+                onEdit={setEditingBrother}
+                onAdd={() => setIsAddingBrother(true)}
+              />
+            </TabsContent>
+
+            <TabsContent value="birthdays" className="mt-6">
+              <BirthdayList brothers={brothers} />
+            </TabsContent>
+
+            <TabsContent value="attendance" className="mt-6">
+              <AttendanceReport records={attendanceRecords} />
+            </TabsContent>
+
+            <TabsContent value="treasury" className="mt-6">
+              <TreasuryReport records={paymentRecords} />
+            </TabsContent>
+          </Tabs>
         </div>
-      ) : (
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-6 lg:w-[600px]">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="brothers">Brothers</TabsTrigger>
-            <TabsTrigger value="birthdays">Birthdays</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="treasury">Treasury</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="mt-6">
-            <AdminDashboard
-              brothers={brothers}
-              sessions={sessions}
-              payments={paymentRecords}
-              attendance={attendanceRecords}
-              onAddBrother={() => setIsAddingBrother(true)}
-              onAddSession={() => {}}
-              onManageAttendance={() => {}}
-              onManagePayments={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="brothers" className="mt-6">
-            <BrotherList
-              brothers={brothers}
-              onEdit={setEditingBrother}
-              onAdd={() => setIsAddingBrother(true)}
-            />
-          </TabsContent>
-
-          <TabsContent value="birthdays" className="mt-6">
-            <BirthdayList brothers={brothers} />
-          </TabsContent>
-
-          <TabsContent value="attendance" className="mt-6">
-            <AttendanceReport records={attendanceRecords} />
-          </TabsContent>
-
-          <TabsContent value="treasury" className="mt-6">
-            <TreasuryReport records={paymentRecords} />
-          </TabsContent>
-        </Tabs>
-      )}
+      </main>
     </div>
   );
 };

@@ -18,8 +18,6 @@ export function OverdueList() {
   const { data: overduePayments, isLoading } = useQuery<OverdueBrother[]>({
     queryKey: ["overdue-payments"],
     queryFn: async () => {
-      console.log("Fetching overdue payments...");
-      
       const { data, error } = await supabase
         .from("monthly_dues")
         .select(`
@@ -34,14 +32,15 @@ export function OverdueList() {
           due_date,
           amount
         `)
-        .eq("status", "overdue");
+        .eq("status", "overdue")
+        .order("due_date");
 
       if (error) {
         console.error("Error fetching overdue payments:", error);
         throw error;
       }
 
-      console.log("Overdue payments data:", data);
+      console.log("Overdue payments raw data:", data);
 
       // Agrupar por irmão
       const groupedByBrother = (data || []).reduce<Record<string, OverdueBrother>>((acc, payment) => {
@@ -69,14 +68,10 @@ export function OverdueList() {
         return acc;
       }, {});
 
+      console.log("Grouped overdue payments:", groupedByBrother);
       return Object.values(groupedByBrother);
     }
   });
-
-  const handleGenerateReport = () => {
-    // TODO: Implementar geração do relatório em PDF
-    console.log("Gerando relatório...");
-  };
 
   if (isLoading) {
     return (
@@ -90,9 +85,6 @@ export function OverdueList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Irmãos Inadimplentes</h2>
-        <Button onClick={handleGenerateReport}>
-          Gerar Relatório de Inadimplentes
-        </Button>
       </div>
 
       <div className="rounded-md border">
@@ -108,7 +100,7 @@ export function OverdueList() {
           <TableBody>
             {overduePayments?.map((payment) => (
               <TableRow key={payment.brotherId}>
-                <TableCell>{payment.brotherName}</TableCell>
+                <TableCell className="font-medium">{payment.brotherName}</TableCell>
                 <TableCell>
                   {payment.overdueMonths
                     .sort((a, b) => {
@@ -116,16 +108,16 @@ export function OverdueList() {
                       return a.month - b.month;
                     })
                     .map(({ month, year, dueDate }) => (
-                      <div key={`${month}-${year}`}>
+                      <div key={`${month}-${year}`} className="text-sm">
                         {format(new Date(year, month - 1), "MMMM 'de' yyyy", { locale: ptBR })}
-                        <span className="text-muted-foreground text-sm ml-2">
+                        <span className="text-muted-foreground ml-2">
                           (Vencimento: {format(new Date(dueDate), "dd/MM/yyyy")})
                         </span>
                       </div>
                     ))}
                 </TableCell>
                 <TableCell className="text-right">{payment.totalOverdue}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-medium">
                   R$ {payment.totalAmount.toFixed(2)}
                 </TableCell>
               </TableRow>

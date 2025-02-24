@@ -118,14 +118,14 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
 };
 
 export const fetchCriticalOverdueBrothers = async (): Promise<CriticalOverdueBrother[]> => {
+  // Using a raw query for the view instead of from()
   const { data, error } = await supabase
-    .from("critical_overdue_brothers")
-    .select("*");
+    .rpc('get_critical_overdue_brothers');
 
   if (error) throw error;
   if (!data) return [];
 
-  return data.map(item => ({
+  return data.map((item: any) => ({
     id: item.id,
     name: item.name,
     overdueCount: item.overdue_count,

@@ -50,28 +50,29 @@ export function usePaymentForm() {
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
 
+      // Primeiro, vamos registrar os pagamentos
       const { error } = await supabase
         .from("monthly_dues")
         .insert(payments);
       
       if (error) throw error;
 
-      // Se o pagamento foi registrado como pago, criar movimentação no caixa
+      // Se o pagamento foi registrado como pago, criar movimentações no caixa
       if (data.status === 'paid') {
-        for (const month of data.months) {
-          const { error: cashError } = await supabase
-            .from("cash_movements")
-            .insert({
-              type: "income",
-              category: "monthly_fee",
-              amount: data.amount,
-              month: month,
-              year: data.year,
-              description: `Mensalidade - Mês ${month}/${data.year}`
-            });
+        const cashMovements = data.months.map(month => ({
+          type: "income",
+          category: "monthly_fee",
+          amount: data.amount,
+          month: month,
+          year: data.year,
+          description: `Mensalidade - Mês ${month}/${data.year}`
+        }));
 
-          if (cashError) throw cashError;
-        }
+        const { error: cashError } = await supabase
+          .from("cash_movements")
+          .insert(cashMovements);
+
+        if (cashError) throw cashError;
       }
     },
     onSuccess: () => {

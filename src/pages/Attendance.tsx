@@ -10,8 +10,12 @@ import { AttendanceChart } from "@/components/attendance/AttendanceChart";
 import { AttendanceTable } from "@/components/attendance/AttendanceTable";
 import { PresentBrothersDialog } from "@/components/attendance/PresentBrothersDialog";
 import { AttendanceReport } from "@/components/attendance/AttendanceReport";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useToast } from "@/components/ui/use-toast";
 
 const Attendance = () => {
+  const { isAdmin } = useIsAdmin();
+  const { toast } = useToast();
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
@@ -73,6 +77,15 @@ const Attendance = () => {
   });
 
   const handleSessionClick = async (session: any) => {
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem gerenciar presenças",
+      });
+      return;
+    }
+
     setSelectedSession(session);
     const presentBrothers = session.attendance
       ?.filter((a: any) => a.present)
@@ -124,12 +137,14 @@ const Attendance = () => {
           </div>
         )}
 
-        <PresentBrothersDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          sessionDate={selectedSession?.date}
-          brothers={presentBrothers}
-        />
+        {isAdmin && (
+          <PresentBrothersDialog
+            isOpen={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            sessionDate={selectedSession?.date}
+            brothers={presentBrothers}
+          />
+        )}
 
         <AttendanceReport
           brother={selectedBrother}
@@ -139,6 +154,6 @@ const Attendance = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Attendance;

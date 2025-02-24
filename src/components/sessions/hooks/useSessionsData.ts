@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Session, SessionFormData } from "@/types/session";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function useSessionsData() {
   const { toast } = useToast();
+  const { isAdmin } = useIsAdmin();
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -34,6 +36,15 @@ export function useSessionsData() {
   });
 
   const handleCreateSession = async (data: SessionFormData) => {
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem criar sessões",
+      });
+      return;
+    }
+
     try {
       console.log("Creating session with data:", data);
       
@@ -62,6 +73,15 @@ export function useSessionsData() {
   };
 
   const handleUpdateTrunkAmount = async (sessionId: string, amount: string) => {
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem atualizar o tronco",
+      });
+      return;
+    }
+
     try {
       const numericAmount = parseFloat(amount);
       if (isNaN(numericAmount)) {
@@ -91,6 +111,15 @@ export function useSessionsData() {
   };
 
   const handleFileUpload = async (sessionId: string, file: File) => {
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem enviar atas",
+      });
+      return;
+    }
+
     try {
       setIsUploading(sessionId);
       
@@ -133,7 +162,15 @@ export function useSessionsData() {
   };
 
   const handleEditSession = async (session: Session) => {
-    // Por enquanto apenas mostra um toast informativo
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem editar sessões",
+      });
+      return;
+    }
+
     toast({
       title: "Editar sessão",
       description: "Funcionalidade em desenvolvimento",
@@ -141,6 +178,15 @@ export function useSessionsData() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
+    if (!isAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores podem excluir sessões",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("sessions")
@@ -178,5 +224,6 @@ export function useSessionsData() {
     handleFileUpload,
     handleEditSession,
     handleDeleteSession,
+    isAdmin,
   };
 }

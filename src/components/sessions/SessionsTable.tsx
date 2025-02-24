@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Edit, Trash, UserCheck } from "lucide-react";
@@ -66,7 +65,7 @@ export function SessionsTable({
             <TableHead>Grau</TableHead>
             <TableHead>Tronco do Dia</TableHead>
             <TableHead className="max-w-[300px]">Agenda</TableHead>
-            <TableHead>Ações</TableHead>
+            {isAdmin && <TableHead>Ações</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -99,54 +98,50 @@ export function SessionsTable({
               <TableCell className="max-w-[300px] truncate">
                 {session.agenda}
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onSelectSession(session)}
-                  >
-                    <UserCheck className="h-4 w-4" />
-                    Presenças
-                  </Button>
-                  {session.minutes_url ? (
-                    <a
-                      href={session.minutes_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+              {isAdmin && (
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSelectSession(session)}
                     >
-                      Ver PDF
-                    </a>
-                  ) : (
-                    isAdmin && (
+                      <UserCheck className="h-4 w-4" />
+                      Presenças
+                    </Button>
+                    {session.minutes_url ? (
+                      <a
+                        href={session.minutes_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Ver PDF
+                      </a>
+                    ) : (
                       <MinutesUploadButton
                         sessionId={session.id}
                         isUploading={isUploading === session.id}
                         onFileSelect={(file) => onFileUpload(session.id, file)}
                       />
-                    )
-                  )}
-                  {isAdmin && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEditSession(session)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDeleteSession(session.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </TableCell>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditSession(session)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDeleteSession(session.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

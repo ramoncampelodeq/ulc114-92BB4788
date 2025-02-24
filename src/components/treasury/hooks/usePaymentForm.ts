@@ -54,9 +54,6 @@ export function usePaymentForm() {
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-
       const payments = data.months.map(month => ({
         brother_id: data.brotherId,
         month,
@@ -64,8 +61,7 @@ export function usePaymentForm() {
         amount: data.amount,
         status: data.status,
         paid_at: data.paidAt,
-        due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd"),
-        user_id: userId
+        due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
       }));
 
       console.log('Tentando inserir pagamentos:', { payments });
@@ -90,8 +86,7 @@ export function usePaymentForm() {
           month,
           year: Number(data.year),
           description: `Mensalidade - Mês ${month}/${data.year}`,
-          created_at: new Date().toISOString(),
-          user_id: userId
+          created_at: new Date().toISOString()
         }));
 
         console.log('Tentando inserir movimentações:', cashMovements);

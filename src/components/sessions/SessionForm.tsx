@@ -2,14 +2,7 @@
 import { Session, SessionFormData } from "@/types/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,122 +10,113 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Textarea } from "../ui/textarea";
-
-const formSchema = z.object({
-  date: z.string(),
-  time: z.string(),
-  degree: z.enum(["Apprentice", "Fellow Craft", "Master Mason"]),
-  agenda: z.string().min(1, "Agenda is required"),
-});
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SessionFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: SessionFormData) => Promise<void>;
   session?: Session;
-  onSubmit: (data: SessionFormData) => void;
-  onCancel: () => void;
 }
 
-export default function SessionForm({
-  session,
+export function SessionForm({
+  isOpen,
+  onClose,
   onSubmit,
-  onCancel,
+  session,
 }: SessionFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: session || {
-      date: "",
-      time: "",
-      degree: "Apprentice",
-      agenda: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const data: SessionFormData = {
+      date: formData.get("date") as string,
+      time: formData.get("time") as string,
+      degree: formData.get("degree") as "Apprentice" | "Fellow Craft" | "Master Mason",
+      agenda: formData.get("agenda") as string,
+    };
+
+    await onSubmit(data);
+    onClose();
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {session ? "Editar Sessão" : "Nova Sessão"}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                defaultValue={session?.date}
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="time">Horário</Label>
+              <Input
+                id="time"
+                name="time"
+                type="time"
+                defaultValue={session?.time}
+                required
+              />
+            </div>
 
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <div className="grid gap-2">
+              <Label htmlFor="degree">Grau</Label>
+              <Select 
+                name="degree" 
+                defaultValue={session?.degree || "Apprentice"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o grau" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Apprentice">Aprendiz</SelectItem>
+                  <SelectItem value="Fellow Craft">Companheiro</SelectItem>
+                  <SelectItem value="Master Mason">Mestre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <FormField
-            control={form.control}
-            name="degree"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Degree</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select degree" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Apprentice">Apprentice</SelectItem>
-                    <SelectItem value="Fellow Craft">Fellow Craft</SelectItem>
-                    <SelectItem value="Master Mason">Master Mason</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <div className="grid gap-2">
+              <Label htmlFor="agenda">Agenda</Label>
+              <Textarea
+                id="agenda"
+                name="agenda"
+                defaultValue={session?.agenda}
+                required
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
 
-          <FormField
-            control={form.control}
-            name="agenda"
-            render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel>Agenda</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter the session's agenda..."
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {session ? "Update Session" : "Add Session"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              {session ? "Salvar" : "Criar"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

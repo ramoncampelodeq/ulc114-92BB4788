@@ -3,10 +3,8 @@ export type SessionFormData = {
   date: string;
   time: string;
   degree: "Apprentice" | "Fellow Craft" | "Master Mason";
-  topic: string;
   agenda: string;
-  minutes: string;
-  balaustreUrl?: string;
+  minutes_url?: string;
 };
 
 export type Session = {
@@ -14,10 +12,8 @@ export type Session = {
   date: string;
   time: string;
   degree: "Apprentice" | "Fellow Craft" | "Master Mason";
-  topic: string;
   agenda: string;
-  minutes: string;
-  balaustreUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  minutes_url?: string;
+  created_at: string;
+  user_id?: string;
 };

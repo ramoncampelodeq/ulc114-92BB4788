@@ -5,7 +5,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Session } from "@/types/session";
+import { Session, SessionFormData } from "@/types/session";
 import {
   Table,
   TableBody,
@@ -17,13 +17,14 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
+import { SessionForm } from "@/components/sessions/SessionForm";
 
 const Sessions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data: sessions, isLoading } = useQuery({
+  const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ["sessions"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,6 +44,26 @@ const Sessions = () => {
       return data as Session[];
     },
   });
+
+  const handleCreateSession = async (data: SessionFormData) => {
+    try {
+      const { error } = await supabase.from("sessions").insert([data]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sessão criada com sucesso!",
+      });
+      
+      refetch();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar sessão",
+        description: error.message,
+      });
+    }
+  };
 
   const getDegreeLabel = (degree: string) => {
     switch (degree) {
@@ -139,6 +160,12 @@ const Sessions = () => {
           Nenhuma sessão encontrada
         </div>
       )}
+
+      <SessionForm
+        isOpen={isCreating}
+        onClose={() => setIsCreating(false)}
+        onSubmit={handleCreateSession}
+      />
     </div>
   );
 };

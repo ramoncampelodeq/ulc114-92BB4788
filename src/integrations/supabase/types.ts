@@ -105,8 +105,7 @@ export type Database = {
           due_date: string
           id: string
           month: number
-          paid: boolean
-          payment_date: string | null
+          paid_at: string | null
           status: string
           user_id: string | null
           year: number
@@ -118,8 +117,7 @@ export type Database = {
           due_date?: string
           id?: string
           month: number
-          paid?: boolean
-          payment_date?: string | null
+          paid_at?: string | null
           status?: string
           user_id?: string | null
           year: number
@@ -131,8 +129,7 @@ export type Database = {
           due_date?: string
           id?: string
           month?: number
-          paid?: boolean
-          payment_date?: string | null
+          paid_at?: string | null
           status?: string
           user_id?: string | null
           year?: number

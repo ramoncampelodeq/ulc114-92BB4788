@@ -38,7 +38,6 @@ export const fetchMonthlyDues = async (): Promise<Payment[]> => {
       paid_at,
       due_date,
       created_at,
-      updated_at,
       brother:brothers (
         id,
         name,
@@ -66,7 +65,7 @@ export const fetchMonthlyDues = async (): Promise<Payment[]> => {
     paidAt: item.paid_at,
     dueDate: item.due_date,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.created_at // Using created_at since we don't have updated_at
   }));
 };
 
@@ -86,7 +85,6 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
       paid_at,
       due_date,
       created_at,
-      updated_at,
       brother:brothers (
         id,
         name,
@@ -115,7 +113,7 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
     paidAt: item.paid_at,
     dueDate: item.due_date,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.created_at // Using created_at since we don't have updated_at
   }));
 };
 

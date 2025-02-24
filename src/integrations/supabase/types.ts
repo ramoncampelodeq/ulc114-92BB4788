@@ -104,6 +104,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_recurring: boolean | null
           month: number
           type: Database["public"]["Enums"]["cash_movement_type"]
           user_id: string | null
@@ -115,6 +116,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean | null
           month: number
           type: Database["public"]["Enums"]["cash_movement_type"]
           user_id?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean | null
           month?: number
           type?: Database["public"]["Enums"]["cash_movement_type"]
           user_id?: string | null
@@ -317,6 +320,10 @@ export type Database = {
       }
     }
     Functions: {
+      copy_recurring_movements: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined

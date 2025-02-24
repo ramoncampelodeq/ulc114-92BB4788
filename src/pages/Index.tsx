@@ -19,7 +19,7 @@ import {
   LogOut,
 } from "lucide-react";
 import BirthdayList from "@/components/brothers/BirthdayList";
-import { Brother } from "@/types/brother";
+import { Brother, Relative } from "@/types/brother";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -53,7 +53,25 @@ const Index = () => {
       
       if (error) throw error;
       
-      setBrothers(data || []);
+      // Mapear os dados do formato do banco para o formato da aplicação
+      const formattedBrothers: Brother[] = (data || []).map(brother => ({
+        id: brother.id,
+        name: brother.name,
+        email: brother.email,
+        degree: brother.degree,
+        profession: brother.profession,
+        birth_date: brother.birth_date,
+        phone: brother.phone,
+        higher_degree: brother.higher_degree || undefined,
+        relatives: (brother.relatives || []).map((relative: any): Relative => ({
+          id: relative.id,
+          name: relative.name,
+          relationship: relative.relationship,
+          birthDate: relative.birth_date // Convertendo birth_date para birthDate
+        }))
+      }));
+      
+      setBrothers(formattedBrothers);
     } catch (error) {
       console.error('Error fetching brothers:', error);
     }

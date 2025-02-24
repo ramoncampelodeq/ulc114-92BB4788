@@ -40,6 +40,13 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
+              alt="ULC 114 Logo" 
+              className="w-32 h-32"
+            />
+          </div>
           <CardTitle className="text-3xl font-serif text-primary mb-2">ULC 114</CardTitle>
           <CardDescription>Gerenciamento da loja maçônica</CardDescription>
         </CardHeader>

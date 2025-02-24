@@ -22,11 +22,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Brother } from "@/types/brother";
+import { AttendanceReport } from "@/components/attendance/AttendanceReport";
 
 const Attendance = () => {
   const navigate = useNavigate();
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["sessions-with-attendance", selectedDegree, selectedPeriod],
@@ -66,10 +70,30 @@ const Attendance = () => {
       return sessionsData.map(session => ({
         ...session,
         totalPresent: session.attendance?.filter(a => a.present).length || 0,
-        totalBrothers: brothersData.length
+        totalBrothers: brothersData.length,
+        date: session.date // Adicionado para o gráfico
       }));
     }
   });
+
+  // Query para buscar a lista de irmãos
+  const { data: brothers } = useQuery({
+    queryKey: ["brothers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brothers")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const chartData = sessions?.map(session => ({
+    date: format(new Date(session.date), "dd/MM"),
+    presença: (session.totalPresent / session.totalBrothers) * 100
+  })).reverse();
 
   const handleExport = () => {
     if (!sessions) return;
@@ -160,10 +184,52 @@ const Attendance = () => {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="w-[200px]">
+          <Select
+            value={selectedBrother?.id ?? ""}
+            onValueChange={(value) => {
+              const brother = brothers?.find(b => b.id === value);
+              setSelectedBrother(brother ?? null);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar irmão" />
+            </SelectTrigger>
+            <SelectContent>
+              {brothers?.map((brother) => (
+                <SelectItem key={brother.id} value={brother.id}>
+                  {brother.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {sessions && sessions.length > 0 ? (
         <div className="space-y-6">
+          {/* Gráfico de presenças */}
+          <div className="bg-card p-4 rounded-lg border">
+            <h2 className="text-lg font-semibold mb-4">Evolução das Presenças</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="presença"
+                    stroke="#0ea5e9"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Tabela de presenças */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -210,6 +276,13 @@ const Attendance = () => {
           Nenhum registro de presença encontrado
         </div>
       )}
+
+      {/* Relatório individual */}
+      <AttendanceReport
+        brother={selectedBrother}
+        isOpen={!!selectedBrother}
+        onClose={() => setSelectedBrother(null)}
+      />
     </div>
   );
 };

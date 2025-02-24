@@ -61,10 +61,10 @@ const Index = () => {
       onClick: () => navigate("/attendance"),
     },
     {
-      title: "Mensalidades",
+      title: "Tesouraria",
       description: "Gerenciar pagamentos de mensalidades",
       icon: <DollarSign className="h-8 w-8" />,
-      onClick: () => navigate("/monthly-dues"),
+      onClick: () => navigate("/treasury"),
     },
   ];
 

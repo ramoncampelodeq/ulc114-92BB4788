@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Brother } from "@/types/brother";
 import { Session } from "@/types/session";
-import { Attendance } from "@/types/attendance";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface AttendanceFormProps {
@@ -34,11 +32,9 @@ export function AttendanceForm({ session, isOpen, onClose }: AttendanceFormProps
   const [attendance, setAttendance] = useState<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(true);
 
-  // Buscar irmãos e presenças existentes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Buscar todos os irmãos
         const { data: brothersData, error: brothersError } = await supabase
           .from("brothers")
           .select("*")
@@ -46,7 +42,6 @@ export function AttendanceForm({ session, isOpen, onClose }: AttendanceFormProps
 
         if (brothersError) throw brothersError;
 
-        // Buscar presenças existentes para esta sessão
         const { data: attendanceData, error: attendanceError } = await supabase
           .from("attendance")
           .select("*")
@@ -54,7 +49,6 @@ export function AttendanceForm({ session, isOpen, onClose }: AttendanceFormProps
 
         if (attendanceError) throw attendanceError;
 
-        // Inicializar o mapa de presenças
         const initialAttendance = new Map<string, boolean>();
         brothersData.forEach((brother) => {
           const existing = attendanceData?.find(
@@ -89,7 +83,6 @@ export function AttendanceForm({ session, isOpen, onClose }: AttendanceFormProps
         present,
       }));
 
-      // Deletar registros existentes
       const { error: deleteError } = await supabase
         .from("attendance")
         .delete()
@@ -97,7 +90,6 @@ export function AttendanceForm({ session, isOpen, onClose }: AttendanceFormProps
 
       if (deleteError) throw deleteError;
 
-      // Inserir novos registros
       const { error: insertError } = await supabase
         .from("attendance")
         .insert(records);

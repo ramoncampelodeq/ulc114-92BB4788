@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase";
 import { PaymentFormData } from "../types";
 import type { Database } from "@/integrations/supabase/types";
 
-// Tipos inferidos diretamente do schema do Supabase
 type CashMovementInsert = Database['public']['Tables']['cash_movements']['Insert'];
 
 export function usePaymentForm() {
@@ -30,58 +29,69 @@ export function usePaymentForm() {
 
   const createPaymentMutation = useMutation({
     mutationFn: async (data: PaymentFormData) => {
-      const payments = data.months.map(month => ({
-        brother_id: data.brotherId,
-        month: month,
-        year: data.year,
-        amount: data.amount,
-        status: data.status,
-        paid_at: data.paidAt,
-        due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
-      }));
-
-      const { data: existingPayments, error: checkError } = await supabase
-        .from("monthly_dues")
-        .select("month, year")
-        .eq("brother_id", data.brotherId)
-        .eq("year", data.year)
-        .in("month", data.months);
-
-      if (checkError) throw checkError;
-
-      if (existingPayments && existingPayments.length > 0) {
-        const existingMonths = existingPayments.map(p => p.month);
-        throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
+      // Validar dados antes de prosseguir
+      if (!data.brotherId || data.months.length === 0 || !data.amount) {
+        throw new Error("Dados inválidos para o pagamento");
       }
 
-      // Primeiro, vamos registrar os pagamentos
-      const { error } = await supabase
-        .from("monthly_dues")
-        .insert(payments);
-      
-      if (error) throw error;
+      try {
+        // Verificar pagamentos existentes
+        const { data: existingPayments, error: checkError } = await supabase
+          .from("monthly_dues")
+          .select("month, year")
+          .eq("brother_id", data.brotherId)
+          .eq("year", data.year)
+          .in("month", data.months);
 
-      // Se o pagamento foi registrado como pago, criar movimentações no caixa
-      if (data.status === 'paid') {
-        const cashMovements: CashMovementInsert[] = data.months.map(month => ({
-          type: 'income',
-          category: 'monthly_fee',
-          amount: data.amount,
-          month,
+        if (checkError) throw checkError;
+
+        if (existingPayments && existingPayments.length > 0) {
+          const existingMonths = existingPayments.map(p => p.month);
+          throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
+        }
+
+        // Criar pagamentos
+        const payments = data.months.map(month => ({
+          brother_id: data.brotherId,
+          month: month,
           year: data.year,
-          description: `Mensalidade - Mês ${month}/${data.year}`
+          amount: data.amount,
+          status: data.status,
+          paid_at: data.paidAt,
+          due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
         }));
 
-        console.log('Cash movements to be inserted:', cashMovements);
+        const { error: paymentsError } = await supabase
+          .from("monthly_dues")
+          .insert(payments);
+      
+        if (paymentsError) throw paymentsError;
 
-        const { error: cashError } = await supabase
-          .from("cash_movements")
-          .insert(cashMovements);
+        // Criar movimentações de caixa se o pagamento foi registrado como pago
+        if (data.status === 'paid') {
+          const cashMovements: CashMovementInsert[] = data.months.map(month => ({
+            type: 'income',
+            category: 'monthly_fee',
+            amount: Number(data.amount), // Garantir que amount seja número
+            month,
+            year: Number(data.year), // Garantir que year seja número
+            description: `Mensalidade - Mês ${month}/${data.year}`
+          }));
 
-        if (cashError) {
-          console.error('Error inserting cash movements:', cashError);
-          throw cashError;
+          console.log('Inserindo movimentações:', cashMovements);
+
+          const { error: cashError } = await supabase
+            .from("cash_movements")
+            .insert(cashMovements);
+
+          if (cashError) {
+            console.error('Erro ao inserir movimentações:', cashError);
+            throw new Error(`Erro ao registrar movimentações: ${cashError.message}`);
+          }
         }
+      } catch (error) {
+        console.error('Erro completo:', error);
+        throw error;
       }
     },
     onSuccess: () => {

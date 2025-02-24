@@ -25,6 +25,19 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
     return isValid(date) ? format(date, 'dd/MM/yyyy') : '-';
   };
 
+  const translateDegree = (degree: string) => {
+    switch (degree) {
+      case "Apprentice":
+        return "Aprendiz";
+      case "Fellow Craft":
+        return "Companheiro";
+      case "Master Mason":
+        return "Mestre";
+      default:
+        return degree;
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -41,7 +54,7 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
           {brothers.map((brother) => (
             <TableRow key={brother.id}>
               <TableCell>{brother.name}</TableCell>
-              <TableCell>{brother.degree}</TableCell>
+              <TableCell>{translateDegree(brother.degree)}</TableCell>
               <TableCell>{brother.profession}</TableCell>
               <TableCell>
                 {formatDate(brother.birth_date)}

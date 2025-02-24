@@ -101,10 +101,14 @@ const Brothers = () => {
 
         if (!authData.user) throw new Error('Erro ao criar usuário');
 
-        // Depois, criar o registro na tabela brothers
+        // Depois, criar o registro na tabela brothers vinculado ao usuário criado
         const { error: brotherError } = await supabase
           .from('brothers')
-          .insert([{ ...brotherData, id: authData.user.id }]);
+          .insert([{ 
+            ...brotherData,
+            id: authData.user.id,
+            user_id: authData.user.id 
+          }]);
 
         if (brotherError) throw brotherError;
 

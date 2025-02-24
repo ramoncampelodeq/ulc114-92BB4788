@@ -1,6 +1,5 @@
 
 import { Session } from "@/types/session";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,92 +8,110 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Upload, UserCheck } from "lucide-react";
 import { format } from "date-fns";
-import { Edit, FilePlus, FileUp } from "lucide-react";
-import { Input } from "../ui/input";
+import { ptBR } from "date-fns/locale";
 
 interface SessionListProps {
   sessions: Session[];
-  onEdit: (session: Session) => void;
-  onAdd: () => void;
-  onUploadBalaustre: (session: Session) => void;
+  onAttendanceClick: (session: Session) => void;
+  onFileUpload: (sessionId: string, file: File) => void;
+  isUploading: string | null;
 }
 
-export default function SessionList({
+export function SessionList({
   sessions,
-  onEdit,
-  onAdd,
-  onUploadBalaustre,
+  onAttendanceClick,
+  onFileUpload,
+  isUploading,
 }: SessionListProps) {
-  return (
-    <div className="space-y-4 animate-fadeIn">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="section-header">Sessions</h2>
-        <Button onClick={onAdd} className="space-x-2">
-          <FilePlus className="h-4 w-4" />
-          <span>Add Session</span>
-        </Button>
-      </div>
+  const getDegreeLabel = (degree: string) => {
+    switch (degree) {
+      case "aprendiz":
+        return "Aprendiz";
+      case "companheiro":
+        return "Companheiro";
+      case "mestre":
+        return "Mestre";
+      default:
+        return degree;
+    }
+  };
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Degree</TableHead>
-              <TableHead>Agenda</TableHead>
-              <TableHead>Balaustre</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((session) => (
-              <TableRow key={session.id}>
-                <TableCell>{format(new Date(session.date), "PP")}</TableCell>
-                <TableCell>{session.time}</TableCell>
-                <TableCell>{session.degree}</TableCell>
-                <TableCell className="max-w-xs truncate">
-                  {session.agenda}
-                </TableCell>
-                <TableCell>
-                  {session.balaustreUrl ? (
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Data</TableHead>
+            <TableHead>Horário</TableHead>
+            <TableHead>Grau</TableHead>
+            <TableHead className="max-w-[300px]">Agenda</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sessions.map((session) => (
+            <TableRow key={session.id}>
+              <TableCell>
+                {format(new Date(session.date), "dd 'de' MMMM 'de' yyyy", {
+                  locale: ptBR,
+                })}
+              </TableCell>
+              <TableCell>{session.time}</TableCell>
+              <TableCell>{getDegreeLabel(session.degree)}</TableCell>
+              <TableCell className="max-w-[300px] truncate">
+                {session.agenda}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAttendanceClick(session)}
+                  >
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Presenças
+                  </Button>
+                  {session.minutes_url ? (
                     <a
-                      href={session.balaustreUrl}
+                      href={session.minutes_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      View PDF
+                      Ver PDF
                     </a>
                   ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onUploadBalaustre(session)}
-                      className="space-x-2"
-                    >
-                      <FileUp className="h-4 w-4" />
-                      <span>Upload</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id={`file-${session.id}`}
+                        className="hidden"
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onFileUpload(session.id, file);
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`file-${session.id}`}
+                        className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {isUploading === session.id ? "Enviando..." : "Anexar PDF"}
+                      </label>
+                    </div>
                   )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(session)}
-                    className="space-x-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit</span>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

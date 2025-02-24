@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -11,18 +11,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
 
 const Attendance = () => {
   const navigate = useNavigate();
+  const [selectedDegree, setSelectedDegree] = useState<string>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
 
   const { data: sessions, isLoading } = useQuery({
-    queryKey: ["sessions-with-attendance"],
+    queryKey: ["sessions-with-attendance", selectedDegree, selectedPeriod],
     queryFn: async () => {
-      // Buscar todas as sessões
-      const { data: sessionsData, error: sessionsError } = await supabase
+      let query = supabase
         .from("sessions")
         .select(`
           *,
@@ -33,16 +42,27 @@ const Attendance = () => {
         `)
         .order("date", { ascending: false });
 
+      // Filtro por grau
+      if (selectedDegree !== "all") {
+        query = query.eq("degree", selectedDegree);
+      }
+
+      // Filtro por período
+      if (selectedPeriod !== "all") {
+        const monthsAgo = subMonths(new Date(), parseInt(selectedPeriod));
+        query = query.gte("date", monthsAgo.toISOString());
+      }
+
+      const { data: sessionsData, error: sessionsError } = await query;
+
       if (sessionsError) throw sessionsError;
 
-      // Buscar todos os irmãos para referência
       const { data: brothersData, error: brothersError } = await supabase
         .from("brothers")
         .select("*");
 
       if (brothersError) throw brothersError;
 
-      // Processar os dados para incluir informações de presença
       return sessionsData.map(session => ({
         ...session,
         totalPresent: session.attendance?.filter(a => a.present).length || 0,
@@ -50,6 +70,30 @@ const Attendance = () => {
       }));
     }
   });
+
+  const handleExport = () => {
+    if (!sessions) return;
+
+    const csvContent = [
+      ["Data", "Grau", "Presentes", "Total de Irmãos", "% Presença"].join(","),
+      ...sessions.map(session => {
+        const attendancePercentage = (session.totalPresent / session.totalBrothers) * 100;
+        return [
+          format(new Date(session.date), "dd/MM/yyyy"),
+          session.degree,
+          session.totalPresent,
+          session.totalBrothers,
+          `${attendancePercentage.toFixed(1)}%`
+        ].join(",");
+      })
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "presenças.csv";
+    link.click();
+  };
 
   if (isLoading) {
     return (
@@ -69,11 +113,53 @@ const Attendance = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-          <ArrowLeft className="h-5 w-5" />
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-semibold">Presenças</h1>
+        </div>
+        <Button onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Exportar CSV
         </Button>
-        <h1 className="text-2xl font-semibold">Presenças</h1>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <div className="w-[200px]">
+          <Select
+            value={selectedDegree}
+            onValueChange={setSelectedDegree}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por grau" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os graus</SelectItem>
+              <SelectItem value="aprendiz">Aprendiz</SelectItem>
+              <SelectItem value="companheiro">Companheiro</SelectItem>
+              <SelectItem value="mestre">Mestre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-[200px]">
+          <Select
+            value={selectedPeriod}
+            onValueChange={setSelectedPeriod}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo período</SelectItem>
+              <SelectItem value="3">Últimos 3 meses</SelectItem>
+              <SelectItem value="6">Últimos 6 meses</SelectItem>
+              <SelectItem value="12">Último ano</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {sessions && sessions.length > 0 ? (

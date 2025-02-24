@@ -71,7 +71,12 @@ export function CashControl() {
   });
 
   const createMovement = useMutation({
-    mutationFn: async (data: Omit<CashMovement, "id" | "createdAt" | "userId">) => {
+    mutationFn: async (data: {
+      type: CashMovementType;
+      category: CashMovementCategory;
+      amount: number;
+      description?: string;
+    }) => {
       const { error } = await supabase
         .from("cash_movements")
         .insert([{

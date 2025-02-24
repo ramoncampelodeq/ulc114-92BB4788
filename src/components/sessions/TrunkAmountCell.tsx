@@ -1,6 +1,9 @@
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Session } from "@/types/session";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
 
 interface TrunkAmountCellProps {
   session: Session;
@@ -17,6 +20,59 @@ export function TrunkAmountCell({
   onUpdate,
   onCancel,
 }: TrunkAmountCellProps) {
+  const queryClient = useQueryClient();
+
+  const handleUpdate = async (id: string, amount: string) => {
+    try {
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount)) {
+        throw new Error("Valor inválido");
+      }
+
+      const date = new Date(session.date);
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+
+      // Registra o valor do tronco na sessão
+      const { error: sessionError } = await supabase
+        .from("sessions")
+        .update({ daily_trunk_amount: numericAmount })
+        .eq("id", id);
+
+      if (sessionError) throw sessionError;
+
+      // Cria a movimentação no caixa
+      const { error: cashError } = await supabase
+        .from("cash_movements")
+        .insert({
+          type: "income",
+          category: "solidarity_trunk",
+          amount: numericAmount,
+          month: month,
+          year: year,
+          description: `Tronco de Solidariedade - Sessão ${date.toLocaleDateString()}`
+        });
+
+      if (cashError) throw cashError;
+
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-movements"] });
+
+      toast({
+        title: "Valor atualizado com sucesso!",
+      });
+
+      onUpdate(id, amount);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar valor",
+        description: error.message,
+      });
+    }
+  };
+
   if (editingId === session.id) {
     return (
       <div className="flex items-center gap-2">
@@ -26,10 +82,10 @@ export function TrunkAmountCell({
           step="0.01"
           defaultValue={session.daily_trunk_amount}
           className="w-24"
-          onBlur={(e) => onUpdate(session.id, e.target.value)}
+          onBlur={(e) => handleUpdate(session.id, e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              onUpdate(session.id, e.currentTarget.value);
+              handleUpdate(session.id, e.currentTarget.value);
             }
             if (e.key === "Escape") {
               onCancel();

@@ -55,12 +55,32 @@ export function usePaymentForm() {
         .insert(payments);
       
       if (error) throw error;
+
+      // Se o pagamento foi registrado como pago, criar movimentação no caixa
+      if (data.status === 'paid') {
+        for (const month of data.months) {
+          const { error: cashError } = await supabase
+            .from("cash_movements")
+            .insert({
+              type: "income",
+              category: "monthly_fee",
+              amount: data.amount,
+              month: month,
+              year: data.year,
+              description: `Mensalidade - Mês ${month}/${data.year}`
+            });
+
+          if (cashError) throw cashError;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["monthly-dues"] });
       queryClient.invalidateQueries({ queryKey: ["personal-payments"] });
       queryClient.invalidateQueries({ queryKey: ["overdue-payments"] });
       queryClient.invalidateQueries({ queryKey: ["critical-overdue-brothers"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-movements"] });
       
       toast({
         title: "Pagamentos registrados",

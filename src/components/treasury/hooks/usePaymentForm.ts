@@ -37,34 +37,6 @@ export function usePaymentForm() {
         throw new Error("Dados inválidos para o pagamento");
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Erro ao obter sessão:', sessionError);
-        throw new Error("Erro ao verificar autenticação");
-      }
-
-      const userId = sessionData.session?.user?.id;
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      // Verificar se o usuário é admin usando a tabela profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        console.error('Erro ao verificar perfil:', profileError);
-        throw new Error("Erro ao verificar permissões do usuário");
-      }
-
-      if (profileData?.role !== 'admin') {
-        throw new Error("Permissão negada: apenas administradores podem registrar pagamentos");
-      }
-
       // Verificar pagamentos existentes
       const { data: existingPayments, error: checkError } = await supabase
         .from("monthly_dues")
@@ -83,6 +55,9 @@ export function usePaymentForm() {
         console.warn('Pagamentos já existentes:', { existingMonths });
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
 
       // Criar pagamentos
       const payments = data.months.map(month => ({

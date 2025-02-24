@@ -68,6 +68,7 @@ export function usePaymentForm() {
     setSelectedYear(new Date().getFullYear().toString());
     setIsPaid(false);
     setPaidAt(format(new Date(), "yyyy-MM-dd"));
+    fetchMonthlyFee();
   };
 
   const createPaymentMutation = useMutation({
@@ -110,20 +111,12 @@ export function usePaymentForm() {
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
 
-      // Buscar o valor calculado da mensalidade
-      const { data: calculatedFee, error: feeError } = await supabase.rpc('calculate_monthly_fee');
-      
-      if (feeError) {
-        console.error('Erro ao calcular valor da mensalidade:', feeError);
-        throw feeError;
-      }
-
-      // Preparar os dados para inserção usando o valor calculado
+      // Preparar os dados para inserção usando o valor informado
       const payments = data.months.map(month => ({
         brother_id: data.brotherId,
         month,
         year: data.year,
-        amount: calculatedFee,
+        amount: data.amount,
         status: data.status,
         paid_at: data.paidAt,
         due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
@@ -146,7 +139,7 @@ export function usePaymentForm() {
         const cashMovements: CashMovementInsert[] = data.months.map(month => ({
           type: 'income',
           category: 'monthly_fee',
-          amount: Number(calculatedFee),
+          amount: Number(data.amount),
           month,
           year: Number(data.year),
           description: `Mensalidade - ${brotherData.name} - ${format(new Date(data.year, month - 1), "MMMM 'de' yyyy", { locale: ptBR })}`,

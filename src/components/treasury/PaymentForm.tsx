@@ -119,10 +119,9 @@ export function PaymentForm() {
             onChange={(e) => setAmount(e.target.value)}
             min={0}
             step={0.01}
-            disabled
           />
           <p className="text-sm text-muted-foreground">
-            Valor calculado automaticamente (10% do salário mínimo)
+            Valor sugerido: 10% do salário mínimo (pode ser ajustado se necessário)
           </p>
         </div>
 

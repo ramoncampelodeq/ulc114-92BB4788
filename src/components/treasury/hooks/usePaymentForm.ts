@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { PaymentFormData } from "../types";
+import { CashMovementType, CashMovementCategory } from "@/types/cash";
 
 export function usePaymentForm() {
   const queryClient = useQueryClient();
@@ -60,8 +61,8 @@ export function usePaymentForm() {
       // Se o pagamento foi registrado como pago, criar movimentações no caixa
       if (data.status === 'paid') {
         const cashMovements = data.months.map(month => ({
-          type: "income",
-          category: "monthly_fee",
+          type: "income" as CashMovementType,
+          category: "monthly_fee" as CashMovementCategory,
           amount: data.amount,
           month: month,
           year: data.year,

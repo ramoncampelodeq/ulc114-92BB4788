@@ -56,9 +56,11 @@ export type Database = {
           birth_date: string
           created_at: string | null
           degree: string
+          email: string
           higher_degree: number | null
           id: string
           name: string
+          phone: string
           profession: string
           user_id: string | null
         }
@@ -66,9 +68,11 @@ export type Database = {
           birth_date: string
           created_at?: string | null
           degree: string
+          email?: string
           higher_degree?: number | null
           id?: string
           name: string
+          phone?: string
           profession: string
           user_id?: string | null
         }
@@ -76,9 +80,11 @@ export type Database = {
           birth_date?: string
           created_at?: string | null
           degree?: string
+          email?: string
           higher_degree?: number | null
           id?: string
           name?: string
+          phone?: string
           profession?: string
           user_id?: string | null
         }

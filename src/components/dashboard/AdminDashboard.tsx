@@ -1,189 +1,116 @@
 
-import { Brother } from "@/types/brother";
-import { Session } from "@/types/session";
-import { PaymentRecord } from "@/types/payment";
-import { AttendanceRecord } from "@/types/attendance";
-import DashboardCard from "./DashboardCard";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { format } from "date-fns";
-import {
-  Users,
-  CalendarDays,
-  UserCheck,
-  DollarSign,
-  AlertCircle,
-  Plus,
-} from "lucide-react";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FileText, Users } from "lucide-react";
+import { Payment } from "@/types/payment";
+import { Brother } from "@/types/brother";
+import { supabase } from "@/lib/supabase";
+import { Link } from "react-router-dom";
 
-interface AdminDashboardProps {
-  brothers: Brother[];
-  sessions: Session[];
-  payments: PaymentRecord[];
-  attendance: AttendanceRecord[];
-  onAddBrother: () => void;
-  onAddSession: () => void;
-  onManageAttendance: (sessionId: string) => void;
-  onManagePayments: (brotherId: string) => void;
-}
+export function AdminDashboard() {
+  const { data: recentPayments } = useQuery<Payment[]>({
+    queryKey: ["recent-payments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("monthly_dues")
+        .select(`
+          id,
+          brother_id,
+          month,
+          year,
+          amount,
+          status,
+          paid_at,
+          due_date,
+          created_at,
+          brother:brothers (
+            id,
+            name,
+            email,
+            degree,
+            profession,
+            birth_date,
+            phone
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-export default function AdminDashboard({
-  brothers,
-  sessions,
-  payments,
-  attendance,
-  onAddBrother,
-  onAddSession,
-  onManageAttendance,
-  onManagePayments,
-}: AdminDashboardProps) {
-  const totalBrothers = brothers.length;
-  const totalSessions = sessions.length;
-  
-  const averageAttendance = attendance.reduce(
-    (sum, record) => sum + record.participationPercentage,
-    0
-  ) / attendance.length;
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-  const overduePayments = payments.filter(
-    (record) => record.overdueCount > 0
-  ).length;
+  const { data: totalBrothers } = useQuery<number>({
+    queryKey: ["total-brothers"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("brothers")
+        .select("*", { count: "exact", head: true });
 
-  const criticalOverdue = payments.filter(
-    (record) => record.overdueCount >= 2
-  ).length;
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const { data: totalOverdue } = useQuery<number>({
+    queryKey: ["total-overdue"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("monthly_dues")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "overdue");
+
+      if (error) throw error;
+      return count || 0;
+    }
+  });
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Total Brothers"
-          icon={<Users className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">{totalBrothers}</div>
-        </DashboardCard>
-
-        <DashboardCard
-          title="Total Sessions"
-          icon={<CalendarDays className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">{totalSessions}</div>
-        </DashboardCard>
-
-        <DashboardCard
-          title="Average Attendance"
-          icon={<UserCheck className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">
-            {averageAttendance.toFixed(1)}%
-          </div>
-        </DashboardCard>
-
-        <DashboardCard
-          title="Overdue Payments"
-          icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold text-destructive">
-            {overduePayments}
-          </div>
-          {criticalOverdue > 0 && (
-            <p className="text-xs text-destructive mt-1">
-              {criticalOverdue} brothers with 2+ months overdue
-            </p>
-          )}
-        </DashboardCard>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Recent Sessions</h3>
-            <Button onClick={onAddSession} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Session
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Irmãos</CardTitle>
+          <CardDescription>Total de membros ativos</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{totalBrothers || 0}</div>
+        </CardContent>
+        <CardFooter>
+          <Link to="/brothers">
+            <Button variant="ghost" size="sm">
+              <Users className="mr-2 h-4 w-4" />
+              Ver todos
             </Button>
-          </div>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Degree</TableHead>
-                  <TableHead>Attendance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessions.slice(0, 5).map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell>{format(new Date(session.date), "PP")}</TableCell>
-                    <TableCell>{session.degree}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onManageAttendance(session.id)}
-                      >
-                        Manage
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+          </Link>
+        </CardFooter>
+      </Card>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Overdue Payments</h3>
-            <Button variant="outline" size="sm">
-              View All
+      <Card>
+        <CardHeader>
+          <CardTitle>Mensalidades Atrasadas</CardTitle>
+          <CardDescription>Total de pagamentos pendentes</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{totalOverdue || 0}</div>
+        </CardContent>
+        <CardFooter>
+          <Link to="/monthly-dues">
+            <Button variant="ghost" size="sm">
+              <FileText className="mr-2 h-4 w-4" />
+              Ver detalhes
             </Button>
-          </div>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Brother</TableHead>
-                  <TableHead>Months Overdue</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments
-                  .filter((record) => record.overdueCount > 0)
-                  .slice(0, 5)
-                  .map((record) => (
-                    <TableRow key={record.brother.id}>
-                      <TableCell>{record.brother.name}</TableCell>
-                      <TableCell>
-                        <span className="text-destructive font-medium">
-                          {record.overdueCount}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onManagePayments(record.brother.id)}
-                        >
-                          Manage
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
+          </Link>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

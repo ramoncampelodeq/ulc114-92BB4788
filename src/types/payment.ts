@@ -6,7 +6,7 @@ export type PaymentStatus = "pending" | "paid" | "overdue";
 export type Payment = {
   id: string;
   brotherId: string;
-  brother: Brother;
+  brother?: Brother;
   month: number;
   year: number;
   amount: number;
@@ -31,6 +31,21 @@ export type OverduePayment = {
   brotherName: string;
   overdueMonths: string[];
   totalOverdue: number;
+};
+
+export type PaymentRecord = {
+  brother: Brother;
+  payments: Payment[];
+  overdueCount: number;
+  lastPayment?: Payment;
+};
+
+export type MonthlyPayment = {
+  month: number;
+  year: number;
+  status: PaymentStatus;
+  dueDate: string;
+  paidAt?: string;
 };
 
 export type CriticalOverdueReport = {

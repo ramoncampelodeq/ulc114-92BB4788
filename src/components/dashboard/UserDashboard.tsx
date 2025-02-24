@@ -1,195 +1,135 @@
 
-import { Brother, HigherDegree, Relative } from "@/types/brother";
-import { MonthlyPayment } from "@/types/payment";
-import DashboardCard from "./DashboardCard";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
-  UserCheck,
-  DollarSign,
-  GraduationCap,
-  Users,
-  Edit,
-  Plus,
-} from "lucide-react";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Check, X } from "lucide-react";
+import { Brother } from "@/types/brother";
+import { Payment } from "@/types/payment";
+import { supabase } from "@/lib/supabase";
 
-interface UserDashboardProps {
-  brother: Brother;
-  attendance: {
-    totalSessions: number;
-    attendedSessions: number;
-    participationPercentage: number;
-    recentSessions: { date: string; present: boolean }[];
-  };
-  payments: MonthlyPayment[];
-  onEditProfile: () => void;
-  onEditHigherDegrees: () => void;
-  onManageRelatives: () => void;
-}
+export function UserDashboard() {
+  const { data: brotherData } = useQuery<Brother>({
+    queryKey: ["current-brother"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-export default function UserDashboard({
-  brother,
-  attendance,
-  payments,
-  onEditProfile,
-  onEditHigherDegrees,
-  onManageRelatives,
-}: UserDashboardProps) {
-  const overduePayments = payments.filter(
-    (payment) => payment.status === "overdue"
-  ).length;
+      const { data, error } = await supabase
+        .from("brothers")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: payments } = useQuery<Payment[]>({
+    queryKey: ["monthly-dues"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data, error } = await supabase
+        .from("monthly_dues")
+        .select(`
+          id,
+          brother_id,
+          month,
+          year,
+          amount,
+          status,
+          paid_at,
+          due_date,
+          created_at
+        `)
+        .eq("brother:brothers.user_id", user.id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const recentPayments = payments?.slice(0, 3) || [];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Attendance Rate"
-          icon={<UserCheck className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">
-            {attendance.participationPercentage.toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {attendance.attendedSessions} of {attendance.totalSessions} sessions
-          </p>
-        </DashboardCard>
+    <div className="grid gap-4">
+      {brotherData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bem-vindo, {brotherData.name}</CardTitle>
+            <CardDescription>
+              {brotherData.degree} 
+              {brotherData.higher_degree && ` - ${brotherData.higher_degree}º`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Email:</span>
+                <span>{brotherData.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Profissão:</span>
+                <span>{brotherData.profession}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <DashboardCard
-          title="Payment Status"
-          icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">
-            {overduePayments > 0 ? (
-              <span className="text-destructive">{overduePayments} Overdue</span>
-            ) : (
-              "Up to date"
+      <Card>
+        <CardHeader>
+          <CardTitle>Últimos Pagamentos</CardTitle>
+          <CardDescription>
+            Status das suas últimas mensalidades
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentPayments.map((payment) => (
+              <div
+                key={payment.id}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  {payment.status === "paid" ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
+                  <span>
+                    {format(new Date(payment.year, payment.month - 1), "MMMM yyyy", {
+                      locale: ptBR,
+                    })}
+                  </span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {payment.status === "paid"
+                    ? `Pago em ${format(new Date(payment.paidAt!), "dd/MM/yyyy")}`
+                    : "Pendente"}
+                </span>
+              </div>
+            ))}
+            {recentPayments.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-4">
+                Nenhum pagamento encontrado
+              </div>
             )}
           </div>
-        </DashboardCard>
-
-        <DashboardCard
-          title="Higher Degrees"
-          icon={<GraduationCap className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">
-            {brother.higherDegrees.length > 0
-              ? Math.max(...brother.higherDegrees.map((d) => d.degree))
-              : "-"}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onEditHigherDegrees}
-            className="mt-2"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Manage
-          </Button>
-        </DashboardCard>
-
-        <DashboardCard
-          title="Family Members"
-          icon={<Users className="h-4 w-4 text-muted-foreground" />}
-        >
-          <div className="text-2xl font-bold">{brother.relatives.length}</div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onManageRelatives}
-            className="mt-2"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add
-          </Button>
-        </DashboardCard>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Recent Attendance</h3>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {attendance.recentSessions.map((session, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{format(new Date(session.date), "PP")}</TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          session.present ? "text-green-600" : "text-destructive"
-                        }
-                      >
-                        {session.present ? "Present" : "Absent"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Recent Payments</h3>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.slice(0, 5).map((payment, index) => (
-                  <TableRow
-                    key={index}
-                    className={
-                      payment.status === "overdue" ? "bg-destructive/5" : ""
-                    }
-                  >
-                    <TableCell>
-                      {new Date(0, payment.month - 1).toLocaleString("default", {
-                        month: "long",
-                      })}{" "}
-                      {payment.year}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          payment.status === "overdue"
-                            ? "text-destructive font-medium"
-                            : payment.status === "paid"
-                            ? "text-green-600 font-medium"
-                            : ""
-                        }
-                      >
-                        {payment.status.charAt(0).toUpperCase() +
-                          payment.status.slice(1)}
-                      </span>
-                    </TableCell>
-                    <TableCell>{format(new Date(payment.dueDate), "PP")}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,103 +1,71 @@
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Brother } from "@/types/brother";
 import { format } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ptBR } from "date-fns/locale";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Brother } from "@/types/brother";
 
 interface BrotherDetailsProps {
-  brother: Brother | null;
-  onClose: () => void;
+  brother: Brother;
 }
 
-export default function BrotherDetails({ brother, onClose }: BrotherDetailsProps) {
-  if (!brother) return null;
+export function BrotherDetails({ brother }: BrotherDetailsProps) {
+  const formatDate = (date: string) => {
+    return format(new Date(date), "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
+  };
 
   return (
-    <Dialog open={!!brother} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Brother Details</DialogTitle>
-        </DialogHeader>
-        <ScrollArea className="h-full max-h-[60vh] pr-4">
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-medium mb-1">Name</h3>
-                <p className="text-muted-foreground">{brother.name}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Profession</h3>
-                <p className="text-muted-foreground">{brother.profession}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Birth Date</h3>
-                <p className="text-muted-foreground">
-                  {format(new Date(brother.birth_date), "PP")}
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Degree</h3>
-                <p className="text-muted-foreground">{brother.degree}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Email</h3>
-                <p className="text-muted-foreground">{brother.email}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Phone</h3>
-                <p className="text-muted-foreground">{brother.phone}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Initiated Date</h3>
-                <p className="text-muted-foreground">
-                  {format(new Date(brother.dateInitiated), "PP")}
-                </p>
-              </div>
-            </div>
-
-            {brother.higherDegrees.length > 0 && (
-              <div>
-                <h3 className="font-medium mb-2">Higher Degrees</h3>
-                <div className="space-y-2">
-                  {brother.higherDegrees.map((degree, index) => (
-                    <div
-                      key={index}
-                      className="bg-muted p-3 rounded-md grid grid-cols-3 gap-2"
-                    >
-                      <p>Degree {degree.degree}</p>
-                      <p>{format(new Date(degree.dateReceived), "PP")}</p>
-                      <p>{degree.location}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {brother.relatives.length > 0 && (
-              <div>
-                <h3 className="font-medium mb-2">Family Members</h3>
-                <div className="space-y-2">
-                  {brother.relatives.map((relative) => (
-                    <div
-                      key={relative.id}
-                      className="bg-muted p-3 rounded-md grid grid-cols-3 gap-2"
-                    >
-                      <p>{relative.name}</p>
-                      <p>{relative.relationship}</p>
-                      <p>{format(new Date(relative.birthDate), "PP")}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+    <Card>
+      <CardHeader>
+        <CardTitle>{brother.name}</CardTitle>
+        <CardDescription>{brother.profession}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Data de Nascimento
+            </h3>
+            <p>{formatDate(brother.birth_date)}</p>
           </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Grau</h3>
+            <p>{brother.degree}</p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            Contato
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p>{brother.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Telefone</p>
+              <p>{brother.phone}</p>
+            </div>
+          </div>
+        </div>
+
+        {brother.higher_degree && (
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              Grau Filosófico
+            </h3>
+            <p>{brother.higher_degree}º</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

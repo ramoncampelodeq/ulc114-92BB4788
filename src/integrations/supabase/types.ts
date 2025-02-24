@@ -97,6 +97,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_movements: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["cash_movement_category"]
+          created_at: string
+          description: string | null
+          id: string
+          month: number
+          type: Database["public"]["Enums"]["cash_movement_type"]
+          user_id: string | null
+          year: number
+        }
+        Insert: {
+          amount: number
+          category: Database["public"]["Enums"]["cash_movement_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          month: number
+          type: Database["public"]["Enums"]["cash_movement_type"]
+          user_id?: string | null
+          year: number
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["cash_movement_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          month?: number
+          type?: Database["public"]["Enums"]["cash_movement_type"]
+          user_id?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       monthly_dues: {
         Row: {
           amount: number
@@ -261,6 +297,18 @@ export type Database = {
       }
     }
     Views: {
+      cash_balance: {
+        Row: {
+          expenses_total: number | null
+          month: number | null
+          monthly_fees_total: number | null
+          other_income_total: number | null
+          solidarity_trunk_total: number | null
+          total_balance: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
       critical_overdue_brothers: {
         Row: {
           id: string | null
@@ -282,7 +330,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      cash_movement_category:
+        | "monthly_fee"
+        | "solidarity_trunk"
+        | "other_income"
+        | "expense"
+      cash_movement_type: "income" | "expense"
     }
     CompositeTypes: {
       [_ in never]: never

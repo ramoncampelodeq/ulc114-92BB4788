@@ -13,11 +13,27 @@ export function usePaymentForm() {
   const queryClient = useQueryClient();
   const [selectedBrotherId, setSelectedBrotherId] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  const [amount, setAmount] = useState("100");
+  const [amount, setAmount] = useState("");
   const [isPaid, setIsPaid] = useState(false);
   const [paidAt, setPaidAt] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [paidMonths, setPaidMonths] = useState<number[]>([]);
+
+  // Fetch the calculated monthly fee when component mounts
+  useEffect(() => {
+    const fetchMonthlyFee = async () => {
+      const { data, error } = await supabase.rpc('calculate_monthly_fee');
+      
+      if (error) {
+        console.error('Erro ao buscar valor da mensalidade:', error);
+        return;
+      }
+
+      setAmount(data.toString());
+    };
+
+    fetchMonthlyFee();
+  }, []);
 
   // Buscar pagamentos existentes quando o irmão ou ano for alterado
   useEffect(() => {
@@ -50,7 +66,6 @@ export function usePaymentForm() {
     setSelectedMonths([]);
     setPaidMonths([]);
     setSelectedYear(new Date().getFullYear().toString());
-    setAmount("100");
     setIsPaid(false);
     setPaidAt(format(new Date(), "yyyy-MM-dd"));
   };
@@ -95,12 +110,20 @@ export function usePaymentForm() {
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
 
-      // Preparar os dados para inserção
+      // Buscar o valor calculado da mensalidade
+      const { data: calculatedFee, error: feeError } = await supabase.rpc('calculate_monthly_fee');
+      
+      if (feeError) {
+        console.error('Erro ao calcular valor da mensalidade:', feeError);
+        throw feeError;
+      }
+
+      // Preparar os dados para inserção usando o valor calculado
       const payments = data.months.map(month => ({
         brother_id: data.brotherId,
         month,
         year: data.year,
-        amount: data.amount,
+        amount: calculatedFee,
         status: data.status,
         paid_at: data.paidAt,
         due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
@@ -123,10 +146,11 @@ export function usePaymentForm() {
         const cashMovements: CashMovementInsert[] = data.months.map(month => ({
           type: 'income',
           category: 'monthly_fee',
-          amount: Number(data.amount),
+          amount: Number(calculatedFee),
           month,
           year: Number(data.year),
-          description: `Mensalidade - ${brotherData.name} - ${format(new Date(data.year, month - 1), "MMMM 'de' yyyy", { locale: ptBR })}`
+          description: `Mensalidade - ${brotherData.name} - ${format(new Date(data.year, month - 1), "MMMM 'de' yyyy", { locale: ptBR })}`,
+          is_recurring: false
         }));
 
         console.log('Tentando inserir movimentações:', cashMovements);

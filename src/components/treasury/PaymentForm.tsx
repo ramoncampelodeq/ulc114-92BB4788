@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,7 +119,11 @@ export function PaymentForm() {
             onChange={(e) => setAmount(e.target.value)}
             min={0}
             step={0.01}
+            disabled
           />
+          <p className="text-sm text-muted-foreground">
+            Valor calculado automaticamente (10% do salário mínimo)
+          </p>
         </div>
 
         <div className="flex items-center space-x-2">

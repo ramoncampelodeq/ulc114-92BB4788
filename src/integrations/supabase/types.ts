@@ -136,6 +136,27 @@ export type Database = {
         }
         Relationships: []
       }
+      minimum_wage: {
+        Row: {
+          amount: number
+          created_at: string | null
+          effective_date: string
+          id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          effective_date?: string
+          id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          effective_date?: string
+          id?: string
+        }
+        Relationships: []
+      }
       monthly_dues: {
         Row: {
           amount: number
@@ -149,7 +170,7 @@ export type Database = {
           year: number
         }
         Insert: {
-          amount: number
+          amount?: number
           brother_id?: string | null
           created_at?: string | null
           due_date?: string
@@ -320,6 +341,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_monthly_fee: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       copy_recurring_movements: {
         Args: Record<PropertyKey, never>
         Returns: undefined

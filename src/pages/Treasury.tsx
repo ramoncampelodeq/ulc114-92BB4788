@@ -2,7 +2,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import {
+  Users,
+  CalendarDays,
+  UserCheck,
+  DollarSign,
+  LogOut,
+} from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -16,11 +22,10 @@ import { PersonalPayments } from "@/components/treasury/PersonalPayments";
 import { CashControl } from "@/components/treasury/cash/CashControl";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/components/ui/use-toast";
 
 const Treasury = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("personal");
+  const [selectedTab, setSelectedTab] = useState("cash");
   const [isAdmin, setIsAdmin] = useState(false);
 
   const { data: session } = useQuery({
@@ -48,66 +53,111 @@ const Treasury = () => {
       }
 
       setIsAdmin(data?.role === "admin");
-      if (data?.role === "admin" && selectedTab === "personal") {
-        setSelectedTab("register");
+      if (!data?.role === "admin") {
+        setSelectedTab("personal");
       }
     };
 
     checkAdminStatus();
-  }, [session?.user?.id, selectedTab]);
+  }, [session?.user?.id]);
 
-  useEffect(() => {
-    if (!isAdmin && selectedTab !== "personal") {
-      setSelectedTab("personal");
-    }
-  }, [isAdmin, selectedTab]);
+  const menuItems = [
+    {
+      title: "Irmãos",
+      icon: <Users className="h-5 w-5" />,
+      onClick: () => navigate("/brothers"),
+    },
+    {
+      title: "Sessões",
+      icon: <CalendarDays className="h-5 w-5" />,
+      onClick: () => navigate("/sessions"),
+    },
+    {
+      title: "Presenças",
+      icon: <UserCheck className="h-5 w-5" />,
+      onClick: () => navigate("/attendance"),
+    },
+    {
+      title: "Tesouraria",
+      icon: <DollarSign className="h-5 w-5" />,
+      onClick: () => navigate("/treasury"),
+    },
+  ];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-semibold">Tesouraria</h1>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b sticky top-0 z-50 bg-background">
+        <div className="flex h-16 items-center px-4 md:px-8">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
+              alt="ULC 114 Logo" 
+              className="h-10 w-10"
+            />
+            <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
+          </div>
+          
+          <div className="flex items-center space-x-2 ml-8">
+            {menuItems.map((item) => (
+              <Button
+                key={item.title}
+                variant={item.title === "Tesouraria" ? "default" : "ghost"}
+                className="flex items-center gap-2"
+                onClick={item.onClick}
+              >
+                {item.icon}
+                {item.title}
+              </Button>
+            ))}
+          </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="w-full">
-          <TabsTrigger value="personal">Minhas Mensalidades</TabsTrigger>
+          <div className="ml-auto flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => supabase.auth.signOut()}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto py-8 px-4 flex-1">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+          <TabsList className="w-full">
+            {isAdmin && (
+              <>
+                <TabsTrigger value="cash">Controle de Caixa</TabsTrigger>
+                <TabsTrigger value="register">Cadastrar Pagamento</TabsTrigger>
+                <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
+                <TabsTrigger value="critical">Relatório Crítico</TabsTrigger>
+              </>
+            )}
+            <TabsTrigger value="personal">Minhas Mensalidades</TabsTrigger>
+          </TabsList>
+
           {isAdmin && (
             <>
-              <TabsTrigger value="register">Cadastrar Pagamento</TabsTrigger>
-              <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
-              <TabsTrigger value="critical">Relatório Crítico</TabsTrigger>
-              <TabsTrigger value="cash">Controle de Caixa</TabsTrigger>
+              <TabsContent value="cash">
+                <CashControl />
+              </TabsContent>
+              <TabsContent value="register">
+                <PaymentForm />
+              </TabsContent>
+              <TabsContent value="overdue">
+                <OverdueList />
+              </TabsContent>
+              <TabsContent value="critical">
+                <CriticalOverdueReport />
+              </TabsContent>
             </>
           )}
-        </TabsList>
-
-        <TabsContent value="personal">
-          <PersonalPayments />
-        </TabsContent>
-
-        {isAdmin && (
-          <>
-            <TabsContent value="register">
-              <PaymentForm />
-            </TabsContent>
-
-            <TabsContent value="overdue">
-              <OverdueList />
-            </TabsContent>
-
-            <TabsContent value="critical">
-              <CriticalOverdueReport />
-            </TabsContent>
-
-            <TabsContent value="cash">
-              <CashControl />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
+          <TabsContent value="personal">
+            <PersonalPayments />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

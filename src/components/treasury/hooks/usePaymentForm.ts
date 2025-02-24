@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -30,7 +29,7 @@ export function usePaymentForm() {
           .from("monthly_dues")
           .select("month")
           .eq("brother_id", selectedBrotherId)
-          .eq("year", selectedYear)
+          .eq("year", parseInt(selectedYear))
           .not("status", "eq", "overdue");
 
         if (error) throw error;
@@ -152,19 +151,12 @@ export function usePaymentForm() {
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
       queryClient.invalidateQueries({ queryKey: ["cash-movements"] });
       
-      toast({
-        title: "Pagamentos registrados",
-        description: "Os pagamentos foram registrados com sucesso."
-      });
+      toast.success("Pagamentos registrados com sucesso");
       resetForm();
     },
     onError: (error: Error) => {
       console.error('Erro na mutation:', error);
-      toast({
-        title: "Erro ao registrar pagamentos",
-        description: error.message || "Ocorreu um erro ao tentar registrar os pagamentos.",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Ocorreu um erro ao tentar registrar os pagamentos.");
     }
   });
 

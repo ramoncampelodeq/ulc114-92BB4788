@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,11 +48,7 @@ export function PaymentForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBrotherId || selectedMonths.length === 0 || !selectedYear || !amount) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 

@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
-import { CashBalance, CashMovement } from "@/types/cash";
+import { CashBalance, CashMovement, CashMovementType, CashMovementCategory } from "@/types/cash";
 import { CashBalanceCard } from "./CashBalanceCard";
 import { CashMovementDialog } from "./CashMovementDialog";
 import { CashMovementList } from "./CashMovementList";

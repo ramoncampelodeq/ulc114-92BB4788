@@ -1,4 +1,3 @@
-
 import { Brother } from "./brother";
 
 export type PaymentStatus = "pending" | "paid" | "overdue";
@@ -58,3 +57,15 @@ export type CriticalOverdueReport = {
   totalBrothers: number;
   overduePercentage: number;
 };
+
+export interface OverdueBrother {
+  brotherId: string;
+  brotherName: string;
+  overdueMonths: Array<{
+    month: number;
+    year: number;
+    dueDate: string;
+  }>;
+  totalOverdue: number;
+  totalAmount: number;
+}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Brother, MasonicDegree } from "@/types/brother";
@@ -32,18 +31,17 @@ export function useBrothers() {
     const formData = new FormData(e.currentTarget);
     
     const brotherData = {
-      name: formData.get('name') as string,
-      profession: formData.get('profession') as string,
-      degree: formData.get('degree') as MasonicDegree,
-      birth_date: formData.get('birth_date') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
+      name: String(formData.get('name')),
+      profession: String(formData.get('profession')),
+      degree: String(formData.get('degree')) as MasonicDegree,
+      birth_date: String(formData.get('birth_date')),
+      email: String(formData.get('email')),
+      phone: String(formData.get('phone')),
       higher_degree: null,
     };
 
     try {
       if (selectedBrother) {
-        // Ao editar, também atualizamos o papel do usuário
         const { error: brotherError } = await supabase
           .from('brothers')
           .update(brotherData)
@@ -51,7 +49,6 @@ export function useBrothers() {
 
         if (brotherError) throw brotherError;
 
-        // Atualizar o papel do usuário no perfil
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ role: formData.get('role') })
@@ -89,7 +86,6 @@ export function useBrothers() {
 
         if (brotherError) throw brotherError;
 
-        // Atualizar o perfil do usuário com o papel selecionado
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ role: role })

@@ -12,9 +12,10 @@ import {
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { OverdueBrother } from "@/types/payment";
 
 export function OverdueList() {
-  const { data: overduePayments, isLoading } = useQuery({
+  const { data: overduePayments, isLoading } = useQuery<OverdueBrother[]>({
     queryKey: ["overdue-payments"],
     queryFn: async () => {
       console.log("Fetching overdue payments...");
@@ -43,7 +44,7 @@ export function OverdueList() {
       console.log("Overdue payments data:", data);
 
       // Agrupar por irmão
-      const groupedByBrother = (data || []).reduce((acc, payment) => {
+      const groupedByBrother = (data || []).reduce<Record<string, OverdueBrother>>((acc, payment) => {
         if (!payment.brother_id || !payment.brother) return acc;
 
         const key = payment.brother_id;

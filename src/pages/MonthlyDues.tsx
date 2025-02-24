@@ -20,14 +20,24 @@ const MonthlyDues = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("personal");
   
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin, isLoading } = useQuery({
     queryKey: ["is-admin"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
       const { data, error } = await supabase.rpc("is_admin");
-      if (error) return false;
+      if (error) {
+        console.error("Erro ao verificar admin:", error);
+        return false;
+      }
       return data || false;
     }
   });
+
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">

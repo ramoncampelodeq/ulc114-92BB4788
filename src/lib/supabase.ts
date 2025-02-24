@@ -53,6 +53,7 @@ export const fetchMonthlyDues = async (): Promise<Payment[]> => {
     .order("month", { ascending: false });
 
   if (error) throw error;
+  if (!data) return [];
 
   return data.map(item => ({
     id: item.id,
@@ -101,6 +102,7 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
     .order("month", { ascending: false });
 
   if (error) throw error;
+  if (!data) return [];
 
   return data.map(item => ({
     id: item.id,
@@ -123,6 +125,7 @@ export const fetchCriticalOverdueBrothers = async (): Promise<CriticalOverdueBro
     .select("*");
 
   if (error) throw error;
+  if (!data) return [];
 
   return data.map(item => ({
     id: item.id,

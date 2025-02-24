@@ -1,8 +1,7 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { fetchMonthlyDues } from "@/lib/supabase";
+import { fetchMonthlyDues, registerPayment } from "@/lib/supabase";
 import {
   Select,
   SelectContent,
@@ -24,16 +23,33 @@ import {
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Brother } from "@/types/brother";
+import { Payment } from "@/types/payment";
+import { PaymentDialog } from "@/components/treasury/PaymentDialog";
+import { ReceiptDialog } from "@/components/treasury/ReceiptDialog";
 
 const MonthlyDues = () => {
   const navigate = useNavigate();
   const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  
+  const queryClient = useQueryClient();
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["monthly-dues", selectedYear],
     queryFn: fetchMonthlyDues
+  });
+
+  const registerPaymentMutation = useMutation({
+    mutationFn: async ({ paymentId, paidAt }: { paymentId: string, paidAt: string }) => {
+      await registerPayment(paymentId, paidAt);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["monthly-dues"] });
+    },
   });
 
   // Get unique years from payments
@@ -76,6 +92,19 @@ const MonthlyDues = () => {
       default:
         return "Pendente";
     }
+  };
+
+  const handlePaymentClick = (payment: Payment) => {
+    setSelectedPayment(payment);
+    if (payment.status === "paid") {
+      setIsReceiptDialogOpen(true);
+    } else {
+      setIsPaymentDialogOpen(true);
+    }
+  };
+
+  const handleRegisterPayment = async (paymentId: string, paidAt: string) => {
+    await registerPaymentMutation.mutateAsync({ paymentId, paidAt });
   };
 
   if (isLoading) {
@@ -188,7 +217,11 @@ const MonthlyDues = () => {
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handlePaymentClick(payment)}
+                    >
                       {payment.status === "paid" ? "Ver recibo" : "Registrar pagamento"}
                     </Button>
                   </TableCell>
@@ -201,6 +234,28 @@ const MonthlyDues = () => {
         <div className="text-center py-8 text-muted-foreground">
           Nenhum registro de mensalidade encontrado
         </div>
+      )}
+
+      {selectedPayment && (
+        <>
+          <PaymentDialog
+            payment={selectedPayment}
+            isOpen={isPaymentDialogOpen}
+            onClose={() => {
+              setIsPaymentDialogOpen(false);
+              setSelectedPayment(null);
+            }}
+            onSubmit={handleRegisterPayment}
+          />
+          <ReceiptDialog
+            payment={selectedPayment}
+            isOpen={isReceiptDialogOpen}
+            onClose={() => {
+              setIsReceiptDialogOpen(false);
+              setSelectedPayment(null);
+            }}
+          />
+        </>
       )}
     </div>
   );

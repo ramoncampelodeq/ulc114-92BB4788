@@ -1,133 +1,28 @@
+import { supabase } from "@/integrations/supabase/client";
+import { Payment } from "@/types/payment";
 
-import { createClient } from '@supabase/supabase-js';
-import { Brother, BrotherFormData } from '@/types/brother';
-import { Session } from '@/types/session';
-import { Payment } from '@/types/payment';
-import { Attendance } from '@/types/attendance';
-
-const supabaseUrl = 'https://nxoixikuzrofjmvacsfz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54b2l4aWt1enJvZmptdmFjc2Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0NTQ1NzEsImV4cCI6MjA1NTAzMDU3MX0.0CLAC8PzYyhPW1gkO9lIDFAgkjmV3vQDVhZq8qmZfDY';
-
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
-
-// Auth functions
-export async function signUp(email: string, password: string, username: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        username,
-      },
-    },
-  });
-  if (error) {
-    console.error('Signup error:', error);
-    throw error;
-  }
-  console.log('Signup successful:', data);
-  return data;
-}
-
-export async function signIn(email: string, password: string) {
-  console.log('Attempting login with:', { email });
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-    console.log('Login successful:', data);
-    return data;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
-
-// Brothers
-export async function fetchBrothers() {
+export const fetchMonthlyDues = async (): Promise<Payment[]> => {
   const { data, error } = await supabase
-    .from('brothers')
+    .from("monthly_dues")
     .select(`
       *,
-      relatives (*),
-      attendance (*)
-    `);
-
-  if (error) throw error;
-  return data as Brother[];
-}
-
-export async function createBrother(brother: BrotherFormData) {
-  const { data, error } = await supabase
-    .from('brothers')
-    .insert([brother])
-    .select()
-    .single();
+      brother:brothers (*)
+    `)
+    .order("year", { ascending: false })
+    .order("month", { ascending: false });
 
   if (error) throw error;
   return data;
-}
+};
 
-export async function updateBrother(id: string, brother: Partial<BrotherFormData>) {
-  const { data, error } = await supabase
-    .from('brothers')
-    .update(brother)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-// Sessions
-export async function fetchSessions() {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select('*');
+export const registerPayment = async (paymentId: string, paidAt: string): Promise<void> => {
+  const { error } = await supabase
+    .from("monthly_dues")
+    .update({
+      status: "paid",
+      paid_at: paidAt,
+    })
+    .eq("id", paymentId);
 
   if (error) throw error;
-  return data as Session[];
-}
-
-// Attendance
-export async function fetchAttendance() {
-  const { data, error } = await supabase
-    .from('attendance')
-    .select(`
-      *,
-      brothers (*)
-    `);
-
-  if (error) throw error;
-  return data as Attendance[];
-}
-
-// Monthly Dues
-export async function fetchMonthlyDues() {
-  const { data, error } = await supabase
-    .from('monthly_dues')
-    .select(`
-      *,
-      brothers (*)
-    `);
-
-  if (error) throw error;
-  return data as Payment[];
-}
+};

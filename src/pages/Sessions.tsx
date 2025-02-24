@@ -1,7 +1,6 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Upload, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -18,12 +17,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import { SessionForm } from "@/components/sessions/SessionForm";
+import { AttendanceForm } from "@/components/attendance/AttendanceForm";
 
 const Sessions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ["sessions"],
@@ -169,7 +170,7 @@ const Sessions = () => {
                 <TableHead>Horário</TableHead>
                 <TableHead>Grau</TableHead>
                 <TableHead className="max-w-[300px]">Agenda</TableHead>
-                <TableHead>Ata</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -186,38 +187,48 @@ const Sessions = () => {
                     {session.agenda}
                   </TableCell>
                   <TableCell>
-                    {session.minutes_url ? (
-                      <a
-                        href={session.minutes_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedSession(session)}
                       >
-                        Ver PDF
-                      </a>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="file"
-                          id={`file-${session.id}`}
-                          className="hidden"
-                          accept=".pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload(session.id, file);
-                            }
-                          }}
-                        />
-                        <label
-                          htmlFor={`file-${session.id}`}
-                          className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Presenças
+                      </Button>
+                      {session.minutes_url ? (
+                        <a
+                          href={session.minutes_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
                         >
-                          <Upload className="h-4 w-4" />
-                          {isUploading === session.id ? "Enviando..." : "Anexar PDF"}
-                        </label>
-                      </div>
-                    )}
+                          Ver PDF
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            id={`file-${session.id}`}
+                            className="hidden"
+                            accept=".pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleFileUpload(session.id, file);
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`file-${session.id}`}
+                            className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
+                          >
+                            <Upload className="h-4 w-4" />
+                            {isUploading === session.id ? "Enviando..." : "Anexar PDF"}
+                          </label>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -235,6 +246,14 @@ const Sessions = () => {
         onClose={() => setIsCreating(false)}
         onSubmit={handleCreateSession}
       />
+
+      {selectedSession && (
+        <AttendanceForm
+          session={selectedSession}
+          isOpen={!!selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
     </div>
   );
 };

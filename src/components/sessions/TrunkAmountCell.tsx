@@ -50,7 +50,7 @@ export function TrunkAmountCell({
           amount: numericAmount,
           month: month,
           year: year,
-          description: `Tronco de Solidariedade - Sessão ${date.toLocaleDateString()}`
+          description: `Tronco de Solidariedade - Sessão ${date.toLocaleDateString('pt-BR')}`
         });
 
       if (cashError) throw cashError;

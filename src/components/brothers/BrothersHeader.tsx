@@ -1,17 +1,29 @@
 
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Home } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { NavigationItem } from "@/components/brothers/types";
+import { useNavigate } from "react-router-dom";
 
 interface BrothersHeaderProps {
   menuItems: NavigationItem[];
 }
 
 export function BrothersHeader({ menuItems }: BrothersHeaderProps) {
+  const navigate = useNavigate();
+  
   return (
     <header className="border-b sticky top-0 z-50 bg-background">
       <div className="flex h-16 items-center px-4 md:px-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/")}
+          className="mr-4"
+        >
+          <Home className="h-5 w-5" />
+        </Button>
+
         <div className="flex items-center gap-2">
           <img 
             src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 

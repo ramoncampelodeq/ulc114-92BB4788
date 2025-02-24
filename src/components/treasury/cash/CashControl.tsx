@@ -11,11 +11,13 @@ import { CashBalance, CashMovement, CashMovementType, CashMovementCategory } fro
 import { CashBalanceCard } from "./CashBalanceCard";
 import { CashMovementDialog } from "./CashMovementDialog";
 import { CashMovementList } from "./CashMovementList";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function CashControl() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAdmin } = useIsAdmin();
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
@@ -103,6 +105,31 @@ export function CashControl() {
     },
   });
 
+  const deleteMovement = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("cash_movements")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-movements"] });
+      toast({
+        title: "Movimentação excluída com sucesso!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir movimentação",
+        description: error.message,
+      });
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -111,16 +138,21 @@ export function CashControl() {
             locale: ptBR,
           })}
         </h2>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Movimentação
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Movimentação
+          </Button>
+        )}
       </div>
 
       {balance && <CashBalanceCard balance={balance} />}
 
       {movements && movements.length > 0 ? (
-        <CashMovementList movements={movements} />
+        <CashMovementList 
+          movements={movements}
+          onDelete={isAdmin ? (id) => deleteMovement.mutate(id) : undefined}
+        />
       ) : (
         <div className="text-center py-8 text-muted-foreground">
           Nenhuma movimentação encontrada

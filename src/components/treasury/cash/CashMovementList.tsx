@@ -9,13 +9,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { CashMovement } from "@/types/cash";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface CashMovementListProps {
   movements: CashMovement[];
+  onDelete?: (id: string) => void;
 }
 
-export function CashMovementList({ movements }: CashMovementListProps) {
+export function CashMovementList({ movements, onDelete }: CashMovementListProps) {
+  const { isAdmin } = useIsAdmin();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -48,6 +54,7 @@ export function CashMovementList({ movements }: CashMovementListProps) {
             <TableHead>Categoria</TableHead>
             <TableHead>Valor</TableHead>
             <TableHead>Descrição</TableHead>
+            {isAdmin && <TableHead>Ações</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -64,6 +71,18 @@ export function CashMovementList({ movements }: CashMovementListProps) {
                 {formatCurrency(movement.amount)}
               </TableCell>
               <TableCell>{movement.description || "-"}</TableCell>
+              {isAdmin && (
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete?.(movement.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

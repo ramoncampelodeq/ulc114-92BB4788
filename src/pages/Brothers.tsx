@@ -68,12 +68,10 @@ const Brothers = () => {
       name: formData.get('name') as string,
       profession: formData.get('profession') as string,
       degree: formData.get('degree') as MasonicDegree,
-      birthDate: formData.get('birthDate') as string,
-      dateInitiated: formData.get('dateInitiated') as string,
+      birth_date: formData.get('birth_date') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      higherDegrees: [],
-      relatives: [],
+      higher_degree: null,
     };
 
     try {
@@ -223,22 +221,12 @@ const Brothers = () => {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="birthDate">Data de Nascimento</Label>
+                  <Label htmlFor="birth_date">Data de Nascimento</Label>
                   <Input
-                    id="birthDate"
-                    name="birthDate"
+                    id="birth_date"
+                    name="birth_date"
                     type="date"
                     defaultValue={selectedBrother?.birthDate}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="dateInitiated">Data de Iniciação</Label>
-                  <Input
-                    id="dateInitiated"
-                    name="dateInitiated"
-                    type="date"
-                    defaultValue={selectedBrother?.dateInitiated}
                     required
                   />
                 </div>

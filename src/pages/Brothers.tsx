@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Brother } from "@/types/brother";
+import { Brother, MasonicDegree } from "@/types/brother";
 import { Button } from "@/components/ui/button";
 import {
   Users,

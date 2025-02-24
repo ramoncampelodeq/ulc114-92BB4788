@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import { SessionForm } from "@/components/sessions/SessionForm";
 import { AttendanceForm } from "@/components/attendance/AttendanceForm";
 import { useSessionsData } from "@/components/sessions/hooks/useSessionsData";
 import { SessionsTable } from "@/components/sessions/SessionsTable";
+import { supabase } from "@/lib/supabase";
 
 const Sessions = () => {
   const navigate = useNavigate();

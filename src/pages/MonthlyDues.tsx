@@ -40,7 +40,7 @@ const MonthlyDues = () => {
   const years = [...new Set(payments?.map(p => p.year))].sort((a, b) => b - a);
 
   // Get brothers from payments
-  const brothers = [...new Set(payments?.map(p => p.brothers))].sort((a, b) => 
+  const brothers = [...new Set(payments?.map(p => p.brother))].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
 
@@ -52,12 +52,30 @@ const MonthlyDues = () => {
   // Filter payments based on selected brother and year
   const filteredPayments = payments?.filter(payment => {
     const yearMatch = payment.year.toString() === selectedYear;
-    const brotherMatch = selectedBrother ? payment.brother_id === selectedBrother.id : true;
+    const brotherMatch = selectedBrother ? payment.brotherId === selectedBrother.id : true;
     return yearMatch && brotherMatch;
   });
 
-  const getStatusColor = (paid: boolean) => {
-    return paid ? "text-green-600" : "text-red-600";
+  const getStatusColor = (status: "paid" | "pending" | "overdue") => {
+    switch (status) {
+      case "paid":
+        return "text-green-600";
+      case "overdue":
+        return "text-red-600";
+      default:
+        return "text-yellow-600";
+    }
+  };
+
+  const getStatusText = (status: "paid" | "pending" | "overdue") => {
+    switch (status) {
+      case "paid":
+        return "Pago";
+      case "overdue":
+        return "Atrasado";
+      default:
+        return "Pendente";
+    }
   };
 
   if (isLoading) {
@@ -151,7 +169,7 @@ const MonthlyDues = () => {
             <TableBody>
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id}>
-                  <TableCell>{payment.brothers.name}</TableCell>
+                  <TableCell>{payment.brother.name}</TableCell>
                   <TableCell>
                     {format(new Date(0, payment.month - 1), "MMMM", {
                       locale: ptBR,
@@ -160,18 +178,18 @@ const MonthlyDues = () => {
                   <TableCell>{payment.year}</TableCell>
                   <TableCell>R$ {payment.amount}</TableCell>
                   <TableCell>
-                    <span className={getStatusColor(payment.paid)}>
-                      {payment.paid ? "Pago" : "Pendente"}
+                    <span className={getStatusColor(payment.status)}>
+                      {getStatusText(payment.status)}
                     </span>
                   </TableCell>
                   <TableCell>
-                    {payment.payment_date
-                      ? format(new Date(payment.payment_date), "dd/MM/yyyy")
+                    {payment.paidAt
+                      ? format(new Date(payment.paidAt), "dd/MM/yyyy")
                       : "-"}
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm">
-                      {payment.paid ? "Ver recibo" : "Registrar pagamento"}
+                      {payment.status === "paid" ? "Ver recibo" : "Registrar pagamento"}
                     </Button>
                   </TableCell>
                 </TableRow>

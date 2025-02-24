@@ -34,8 +34,10 @@ export function usePaymentForm() {
         throw new Error("Dados inválidos para o pagamento");
       }
 
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      
+      if (!userId) {
         throw new Error("Usuário não autenticado");
       }
 
@@ -64,7 +66,7 @@ export function usePaymentForm() {
           status: data.status,
           paid_at: data.paidAt,
           due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd"),
-          user_id: session.user.id
+          user_id: userId
         }));
 
         const { error: paymentsError } = await supabase
@@ -83,7 +85,7 @@ export function usePaymentForm() {
             year: Number(data.year),
             description: `Mensalidade - Mês ${month}/${data.year}`,
             created_at: new Date().toISOString(),
-            user_id: session.user.id
+            user_id: userId
           }));
 
           console.log('Inserindo movimentações:', JSON.stringify(cashMovements, null, 2));

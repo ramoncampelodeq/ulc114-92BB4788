@@ -6,7 +6,6 @@ export type SessionFormData = {
   type: "ordinaria" | "administrativa" | "branca" | "magna";
   agenda: string;
   minutes_url?: string;
-  daily_trunk_amount: number;
 };
 
 export type Session = {

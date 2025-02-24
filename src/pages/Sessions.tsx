@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, Upload, UserCheck } from "lucide-react";
@@ -18,6 +19,7 @@ import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import { SessionForm } from "@/components/sessions/SessionForm";
 import { AttendanceForm } from "@/components/attendance/AttendanceForm";
+import { Input } from "@/components/ui/input";
 
 const Sessions = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const Sessions = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [editingTrunkId, setEditingTrunkId] = useState<string | null>(null);
 
   const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ["sessions"],
@@ -70,6 +73,35 @@ const Sessions = () => {
       toast({
         variant: "destructive",
         title: "Erro ao criar sessão",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateTrunkAmount = async (sessionId: string, amount: string) => {
+    try {
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount)) {
+        throw new Error("Valor inválido");
+      }
+
+      const { error } = await supabase
+        .from("sessions")
+        .update({ daily_trunk_amount: numericAmount })
+        .eq("id", sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Valor atualizado com sucesso!",
+      });
+
+      setEditingTrunkId(null);
+      refetch();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar valor",
         description: error.message,
       });
     }
@@ -169,6 +201,7 @@ const Sessions = () => {
                 <TableHead>Data</TableHead>
                 <TableHead>Horário</TableHead>
                 <TableHead>Grau</TableHead>
+                <TableHead>Tronco do Dia</TableHead>
                 <TableHead className="max-w-[300px]">Agenda</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
@@ -183,6 +216,38 @@ const Sessions = () => {
                   </TableCell>
                   <TableCell>{session.time}</TableCell>
                   <TableCell>{getDegreeLabel(session.degree)}</TableCell>
+                  <TableCell>
+                    {editingTrunkId === session.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={session.daily_trunk_amount}
+                          className="w-24"
+                          onBlur={(e) => handleUpdateTrunkAmount(session.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleUpdateTrunkAmount(session.id, e.currentTarget.value);
+                            }
+                            if (e.key === "Escape") {
+                              setEditingTrunkId(null);
+                            }
+                          }}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setEditingTrunkId(session.id)}
+                        className="hover:underline"
+                      >
+                        {session.daily_trunk_amount ? 
+                          `R$ ${session.daily_trunk_amount.toFixed(2)}` : 
+                          "Adicionar valor"}
+                      </button>
+                    )}
+                  </TableCell>
                   <TableCell className="max-w-[300px] truncate">
                     {session.agenda}
                   </TableCell>

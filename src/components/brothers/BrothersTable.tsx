@@ -14,8 +14,8 @@ import { Pencil, Trash2 } from "lucide-react";
 
 interface BrothersTableProps {
   brothers: Brother[];
-  onEdit: (brother: Brother) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (brother: Brother) => void;
+  onDelete?: (id: string) => void;
 }
 
 export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps) {
@@ -34,7 +34,7 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
             <TableHead>Grau</TableHead>
             <TableHead>Profissão</TableHead>
             <TableHead>Data de Nascimento</TableHead>
-            <TableHead>Ações</TableHead>
+            {(onEdit || onDelete) && <TableHead>Ações</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,24 +46,30 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
               <TableCell>
                 {formatDate(brother.birth_date)}
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(brother)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(brother.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
+              {(onEdit || onDelete) && (
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(brother)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(brother.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

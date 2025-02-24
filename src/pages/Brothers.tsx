@@ -10,10 +10,12 @@ import { BrotherDialog } from "@/components/brothers/BrotherDialog";
 import { BrothersTable } from "@/components/brothers/BrothersTable";
 import { BrothersHeader } from "@/components/brothers/BrothersHeader";
 import { useBrothers } from "@/hooks/useBrothers";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import type { NavigationItem } from "@/components/brothers/types";
 
 const Brothers = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const {
     brothers,
     loading,
@@ -54,12 +56,14 @@ const Brothers = () => {
 
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-8">
-          <BrotherDialog
-            isOpen={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            selectedBrother={selectedBrother}
-            onSubmit={handleSubmit}
-          />
+          {isAdmin && (
+            <BrotherDialog
+              isOpen={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              selectedBrother={selectedBrother}
+              onSubmit={handleSubmit}
+            />
+          )}
         </div>
 
         {loading ? (
@@ -73,8 +77,8 @@ const Brothers = () => {
         ) : (
           <BrothersTable
             brothers={brothers}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            onEdit={isAdmin ? handleEdit : undefined}
+            onDelete={isAdmin ? handleDelete : undefined}
           />
         )}
       </div>

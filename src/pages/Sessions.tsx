@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +14,11 @@ import { AttendanceForm } from "@/components/attendance/AttendanceForm";
 import { useSessionsData } from "@/components/sessions/hooks/useSessionsData";
 import { SessionsTable } from "@/components/sessions/SessionsTable";
 import { supabase } from "@/lib/supabase";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const Sessions = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const {
     sessions,
     isLoading,
@@ -145,10 +148,12 @@ const Sessions = () => {
 
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-8">
-          <Button onClick={() => setIsCreating(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Sessão
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setIsCreating(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Sessão
+            </Button>
+          )}
         </div>
 
         {sessions && sessions.length > 0 ? (

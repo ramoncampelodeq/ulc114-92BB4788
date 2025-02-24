@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { TrunkAmountCell } from "./TrunkAmountCell";
 import { MinutesUploadButton } from "./MinutesUploadButton";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface SessionsTableProps {
   sessions: Session[];
@@ -40,6 +41,8 @@ export function SessionsTable({
   onEditSession,
   onDeleteSession,
 }: SessionsTableProps) {
+  const { isAdmin } = useIsAdmin();
+
   const getDegreeLabel = (degree: string) => {
     switch (degree) {
       case "aprendiz":
@@ -77,13 +80,21 @@ export function SessionsTable({
               <TableCell>{session.time}</TableCell>
               <TableCell>{getDegreeLabel(session.degree)}</TableCell>
               <TableCell>
-                <TrunkAmountCell
-                  session={session}
-                  editingId={editingTrunkId}
-                  onEdit={onEditTrunk}
-                  onUpdate={onUpdateTrunk}
-                  onCancel={onCancelEdit}
-                />
+                {isAdmin ? (
+                  <TrunkAmountCell
+                    session={session}
+                    editingId={editingTrunkId}
+                    onEdit={onEditTrunk}
+                    onUpdate={onUpdateTrunk}
+                    onCancel={onCancelEdit}
+                  />
+                ) : (
+                  <span>
+                    {session.daily_trunk_amount
+                      ? `R$ ${session.daily_trunk_amount.toFixed(2)}`
+                      : "-"}
+                  </span>
+                )}
               </TableCell>
               <TableCell className="max-w-[300px] truncate">
                 {session.agenda}
@@ -108,26 +119,32 @@ export function SessionsTable({
                       Ver PDF
                     </a>
                   ) : (
-                    <MinutesUploadButton
-                      sessionId={session.id}
-                      isUploading={isUploading === session.id}
-                      onFileSelect={(file) => onFileUpload(session.id, file)}
-                    />
+                    isAdmin && (
+                      <MinutesUploadButton
+                        sessionId={session.id}
+                        isUploading={isUploading === session.id}
+                        onFileSelect={(file) => onFileUpload(session.id, file)}
+                      />
+                    )
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEditSession(session)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDeleteSession(session.id)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
+                  {isAdmin && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEditSession(session)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDeleteSession(session.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

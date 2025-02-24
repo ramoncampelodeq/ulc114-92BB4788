@@ -1,6 +1,7 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -24,6 +25,7 @@ import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Brother } from "@/types/brother";
 import { AttendanceReport } from "@/components/attendance/AttendanceReport";
+import { Input } from "@/components/ui/input";
 
 const Attendance = () => {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ const Attendance = () => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["sessions-with-attendance", selectedDegree, selectedType, selectedPeriod],
@@ -81,6 +84,20 @@ const Attendance = () => {
     }
   });
 
+  // Query para buscar a lista de irmãos
+  const { data: brothers } = useQuery({
+    queryKey: ["brothers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brothers")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const chartData = sessions?.map(session => ({
     date: format(new Date(session.date), "dd/MM"),
     presença: (session.totalPresent / session.totalBrothers) * 100
@@ -126,6 +143,11 @@ const Attendance = () => {
     link.click();
   };
 
+  // Filtra a lista de irmãos baseado no termo de busca
+  const filteredBrothers = brothers?.filter(brother =>
+    brother.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
@@ -157,7 +179,7 @@ const Attendance = () => {
         </Button>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
         <div className="w-[200px]">
           <Select
             value={selectedDegree}
@@ -210,6 +232,18 @@ const Attendance = () => {
           </Select>
         </div>
 
+        <div className="flex-1 min-w-[200px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar irmão..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
         <div className="w-[200px]">
           <Select
             value={selectedBrother?.id ?? ""}
@@ -222,7 +256,7 @@ const Attendance = () => {
               <SelectValue placeholder="Selecionar irmão" />
             </SelectTrigger>
             <SelectContent>
-              {brothers?.map((brother) => (
+              {filteredBrothers?.map((brother) => (
                 <SelectItem key={brother.id} value={brother.id}>
                   {brother.name}
                 </SelectItem>

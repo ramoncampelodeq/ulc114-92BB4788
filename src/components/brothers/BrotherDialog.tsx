@@ -107,7 +107,7 @@ export function BrotherDialog({
                 id="birth_date"
                 name="birth_date"
                 type="date"
-                defaultValue={selectedBrother?.birthDate}
+                defaultValue={selectedBrother?.birth_date}
                 required
               />
             </div>

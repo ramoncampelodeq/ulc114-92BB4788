@@ -37,7 +37,7 @@ export default function BrotherDetails({ brother, onClose }: BrotherDetailsProps
               <div>
                 <h3 className="font-medium mb-1">Birth Date</h3>
                 <p className="text-muted-foreground">
-                  {format(new Date(brother.birthDate), "PP")}
+                  {format(new Date(brother.birth_date), "PP")}
                 </p>
               </div>
               <div>

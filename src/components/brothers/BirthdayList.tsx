@@ -52,12 +52,12 @@ export default function BirthdayList({ brothers }: BirthdayListProps) {
 
   // Add brothers' birthdays
   brothers.forEach((brother) => {
-    const birthDate = new Date(brother.birthDate);
+    const birthDate = new Date(brother.birth_date);
     if (birthDate.getMonth() + 1 === parseInt(selectedMonth)) {
       birthdays.push({
         id: brother.id,
         name: brother.name,
-        birthDate: brother.birthDate,
+        birthDate: brother.birth_date,
         type: "brother",
       });
     }

@@ -43,6 +43,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "attendance_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "attendance_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -95,10 +102,12 @@ export type Database = {
           amount: number
           brother_id: string | null
           created_at: string | null
+          due_date: string
           id: string
           month: number
           paid: boolean
           payment_date: string | null
+          status: string
           user_id: string | null
           year: number
         }
@@ -106,10 +115,12 @@ export type Database = {
           amount: number
           brother_id?: string | null
           created_at?: string | null
+          due_date?: string
           id?: string
           month: number
           paid?: boolean
           payment_date?: string | null
+          status?: string
           user_id?: string | null
           year: number
         }
@@ -117,10 +128,12 @@ export type Database = {
           amount?: number
           brother_id?: string | null
           created_at?: string | null
+          due_date?: string
           id?: string
           month?: number
           paid?: boolean
           payment_date?: string | null
+          status?: string
           user_id?: string | null
           year?: number
         }
@@ -130,6 +143,13 @@ export type Database = {
             columns: ["brother_id"]
             isOneToOne: false
             referencedRelation: "brothers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_dues_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
             referencedColumns: ["id"]
           },
         ]
@@ -194,6 +214,13 @@ export type Database = {
             referencedRelation: "brothers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "relatives_brother_id_fkey"
+            columns: ["brother_id"]
+            isOneToOne: false
+            referencedRelation: "critical_overdue_brothers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sessions: {
@@ -234,12 +261,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      critical_overdue_brothers: {
+        Row: {
+          id: string | null
+          latest_due_date: string | null
+          name: string | null
+          overdue_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

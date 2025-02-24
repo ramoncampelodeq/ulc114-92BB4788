@@ -1,5 +1,11 @@
 
-import { MonthlyPayment } from "@/types/payment";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -8,74 +14,114 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { fetchPersonalPayments } from "@/lib/supabase";
+import { Check, X } from "lucide-react";
 
-interface PersonalPaymentsProps {
-  payments: MonthlyPayment[];
-}
+export function PersonalPayments() {
+  const { data: payments, isLoading } = useQuery({
+    queryKey: ["personal-payments"],
+    queryFn: fetchPersonalPayments,
+  });
 
-export default function PersonalPayments({ payments }: PersonalPaymentsProps) {
-  const overdueCount = payments.filter(
-    (payment) => payment.status === "overdue"
-  ).length;
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Minhas Mensalidades</CardTitle>
+          <CardDescription>
+            Histórico de pagamentos das suas mensalidades
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-muted-foreground">
+            Carregando...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!payments?.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Minhas Mensalidades</CardTitle>
+          <CardDescription>
+            Histórico de pagamentos das suas mensalidades
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-muted-foreground">
+            Nenhuma mensalidade encontrada.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="bg-muted/30 p-4 rounded-lg">
-        <h3 className="font-medium mb-2">My Payments</h3>
-        {overdueCount > 0 && (
-          <p className="text-destructive">
-            You have {overdueCount} overdue payment{overdueCount > 1 ? "s" : ""}
-          </p>
-        )}
-      </div>
-
-      <div className="rounded-md border">
+    <Card>
+      <CardHeader>
+        <CardTitle>Minhas Mensalidades</CardTitle>
+        <CardDescription>
+          Histórico de pagamentos das suas mensalidades
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Month</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Due Date</TableHead>
+              <TableHead>Mês/Ano</TableHead>
+              <TableHead>Vencimento</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Paid Date</TableHead>
+              <TableHead>Data Pagamento</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {payments.map((payment) => (
-              <TableRow
-                key={`${payment.month}-${payment.year}`}
-                className={payment.status === "overdue" ? "bg-destructive/5" : ""}
-              >
+              <TableRow key={payment.id}>
                 <TableCell>
-                  {new Date(0, payment.month - 1).toLocaleString("default", {
-                    month: "long",
+                  {format(new Date(0, payment.month - 1), "MMMM/yyyy", {
+                    locale: ptBR,
                   })}
                 </TableCell>
-                <TableCell>{payment.year}</TableCell>
-                <TableCell>{format(new Date(payment.dueDate), "PP")}</TableCell>
                 <TableCell>
-                  <span
-                    className={
-                      payment.status === "overdue"
-                        ? "text-destructive font-medium"
-                        : payment.status === "paid"
-                        ? "text-green-600 font-medium"
-                        : ""
-                    }
-                  >
-                    {payment.status.charAt(0).toUpperCase() +
-                      payment.status.slice(1)}
-                  </span>
+                  {format(new Date(payment.dueDate), "dd/MM/yyyy", {
+                    locale: ptBR,
+                  })}
                 </TableCell>
                 <TableCell>
-                  {payment.paidAt ? format(new Date(payment.paidAt), "PP") : "-"}
+                  <div className="flex items-center gap-2">
+                    {payment.status === "paid" ? (
+                      <>
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-green-600">Pago</span>
+                      </>
+                    ) : payment.status === "overdue" ? (
+                      <>
+                        <X className="h-4 w-4 text-destructive" />
+                        <span className="text-destructive">Atrasado</span>
+                      </>
+                    ) : (
+                      <span className="text-yellow-600">Pendente</span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {payment.paidAt
+                    ? format(new Date(payment.paidAt), "dd/MM/yyyy", {
+                        locale: ptBR,
+                      })
+                    : "-"}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

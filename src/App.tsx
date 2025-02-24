@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Brothers from "./pages/Brothers";
 import Sessions from "./pages/Sessions";
 import Attendance from "./pages/Attendance";
-import MonthlyDues from "./pages/MonthlyDues";
+import Treasury from "./pages/Treasury";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +26,7 @@ const App = () => (
           <Route path="/brothers" element={<Brothers />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/attendance" element={<Attendance />} />
-          <Route path="/monthly-dues" element={<MonthlyDues />} />
+          <Route path="/treasury" element={<Treasury />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

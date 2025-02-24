@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 
-const MonthlyDues = () => {
+const Treasury = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("personal");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -53,7 +53,7 @@ const MonthlyDues = () => {
     };
 
     checkAdminStatus();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, selectedTab]);
 
   useEffect(() => {
     if (!isAdmin && selectedTab !== "personal") {
@@ -106,4 +106,4 @@ const MonthlyDues = () => {
   );
 };
 
-export default MonthlyDues;
+export default Treasury;

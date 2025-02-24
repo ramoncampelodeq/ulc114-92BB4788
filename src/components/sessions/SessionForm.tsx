@@ -41,7 +41,6 @@ export function SessionForm({
       degree: formData.get("degree") as "aprendiz" | "companheiro" | "mestre",
       type: formData.get("type") as "ordinaria" | "administrativa" | "branca" | "magna",
       agenda: formData.get("agenda") as string,
-      daily_trunk_amount: parseFloat(formData.get("daily_trunk_amount") as string) || 0,
     };
 
     console.log("Form data being submitted:", data);
@@ -116,19 +115,6 @@ export function SessionForm({
                   <SelectItem value="magna">Magna</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="daily_trunk_amount">Tronco do Dia (R$)</Label>
-              <Input
-                id="daily_trunk_amount"
-                name="daily_trunk_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                defaultValue={session?.daily_trunk_amount || 0}
-                placeholder="0.00"
-              />
             </div>
 
             <div className="grid gap-2">

@@ -36,9 +36,10 @@ export function usePaymentForm() {
         throw new Error("Dados inválidos para o pagamento");
       }
 
+      // Modificada a consulta para selecionar apenas os campos necessários
       const { data: existingPayments, error: checkError } = await supabase
         .from("monthly_dues")
-        .select("month, year")
+        .select('month, year, id')
         .eq("brother_id", data.brotherId)
         .eq("year", data.year)
         .in("month", data.months);

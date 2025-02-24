@@ -34,7 +34,7 @@ export function CriticalOverdueReport() {
       <CardHeader>
         <CardTitle>Relatório de Inadimplência Crítica</CardTitle>
         <CardDescription>
-          Irmãos com 2 ou mais mensalidades atrasadas
+          Irmãos com 3 ou mais mensalidades atrasadas
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Upload } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -23,6 +23,7 @@ const Sessions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
 
   const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ["sessions"],
@@ -47,14 +48,14 @@ const Sessions = () => {
 
   const handleCreateSession = async (data: SessionFormData) => {
     try {
-      console.log("Creating session with data:", data); // Debug log
+      console.log("Creating session with data:", data);
       
       const { error } = await supabase
         .from("sessions")
         .insert([data]);
 
       if (error) {
-        console.error("Error creating session:", error); // Debug log
+        console.error("Error creating session:", error);
         throw error;
       }
 
@@ -64,12 +65,54 @@ const Sessions = () => {
       
       refetch();
     } catch (error: any) {
-      console.error("Error in handleCreateSession:", error); // Debug log
+      console.error("Error in handleCreateSession:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar sessão",
         description: error.message,
       });
+    }
+  };
+
+  const handleFileUpload = async (sessionId: string, file: File) => {
+    try {
+      setIsUploading(sessionId);
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('sessionId', sessionId);
+
+      const response = await fetch(
+        'https://nxoixikuzrofjmvacsfz.supabase.co/functions/v1/upload-minutes',
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${supabase.auth.getSession()}`
+          }
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao fazer upload da ata');
+      }
+
+      toast({
+        title: "Ata enviada com sucesso!",
+      });
+
+      refetch();
+    } catch (error: any) {
+      console.error('Error uploading minutes:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar ata",
+        description: error.message,
+      });
+    } finally {
+      setIsUploading(null);
     }
   };
 
@@ -153,9 +196,27 @@ const Sessions = () => {
                         Ver PDF
                       </a>
                     ) : (
-                      <span className="text-muted-foreground">
-                        Não disponível
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          id={`file-${session.id}`}
+                          className="hidden"
+                          accept=".pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleFileUpload(session.id, file);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`file-${session.id}`}
+                          className="flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {isUploading === session.id ? "Enviando..." : "Anexar PDF"}
+                        </label>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>

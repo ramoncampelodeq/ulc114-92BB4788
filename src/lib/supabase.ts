@@ -14,17 +14,6 @@ export const signIn = async (email: string, password: string) => {
   if (error) throw error;
 };
 
-export const signUp = async (email: string, password: string, username: string) => {
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username },
-    },
-  });
-  if (error) throw error;
-};
-
 export const fetchMonthlyDues = async (): Promise<Payment[]> => {
   const { data, error } = await supabase
     .from("monthly_dues")
@@ -118,7 +107,6 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
 };
 
 export const fetchCriticalOverdueBrothers = async (): Promise<CriticalOverdueBrother[]> => {
-  // Using a direct select from the view instead of rpc
   const { data, error } = await supabase
     .from('critical_overdue_brothers')
     .select('*');

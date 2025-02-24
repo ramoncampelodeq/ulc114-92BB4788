@@ -46,25 +46,25 @@ const Index = () => {
       title: "Irmãos",
       description: "Gerenciar cadastro dos irmãos",
       icon: <Users className="h-8 w-8" />,
-      onClick: () => console.log("Navegar para Irmãos"),
+      onClick: () => navigate("/brothers"),
     },
     {
       title: "Sessões",
       description: "Agendar e gerenciar sessões",
       icon: <CalendarDays className="h-8 w-8" />,
-      onClick: () => console.log("Navegar para Sessões"),
+      onClick: () => navigate("/sessions"),
     },
     {
       title: "Presenças",
       description: "Controlar presenças nas sessões",
       icon: <UserCheck className="h-8 w-8" />,
-      onClick: () => console.log("Navegar para Presenças"),
+      onClick: () => navigate("/attendance"),
     },
     {
       title: "Mensalidades",
       description: "Gerenciar pagamentos de mensalidades",
       icon: <DollarSign className="h-8 w-8" />,
-      onClick: () => console.log("Navegar para Mensalidades"),
+      onClick: () => navigate("/monthly-dues"),
     },
   ];
 

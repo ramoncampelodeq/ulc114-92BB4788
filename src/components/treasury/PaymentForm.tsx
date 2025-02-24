@@ -43,9 +43,27 @@ export function PaymentForm() {
       month: number;
       year: number;
       amount: number;
-      status: string;
+      status: "pending" | "paid";
       paidAt?: string;
     }) => {
+      // Primeiro, verificamos se já existe um pagamento para este mês/ano/irmão
+      const { data: existingPayment, error: checkError } = await supabase
+        .from("monthly_dues")
+        .select("id")
+        .eq("brother_id", data.brotherId)
+        .eq("month", data.month)
+        .eq("year", data.year)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError;
+      }
+
+      if (existingPayment) {
+        throw new Error("Já existe um pagamento registrado para este mês/ano");
+      }
+
+      // Se não existir, criamos o novo pagamento
       const { error } = await supabase
         .from("monthly_dues")
         .insert([{
@@ -62,16 +80,20 @@ export function PaymentForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["monthly-dues"] });
+      queryClient.invalidateQueries({ queryKey: ["personal-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["overdue-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["critical-overdue-brothers"] });
+      
       toast({
         title: "Pagamento registrado",
         description: "O pagamento foi registrado com sucesso."
       });
       resetForm();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Erro ao registrar pagamento",
-        description: "Ocorreu um erro ao tentar registrar o pagamento.",
+        description: error.message || "Ocorreu um erro ao tentar registrar o pagamento.",
         variant: "destructive"
       });
     }
@@ -103,7 +125,7 @@ export function PaymentForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBrotherId || !selectedMonth || !selectedYear) {
+    if (!selectedBrotherId || !selectedMonth || !selectedYear || !amount) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",

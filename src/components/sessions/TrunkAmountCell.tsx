@@ -33,16 +33,29 @@ export function TrunkAmountCell({
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
 
+      console.log('Atualizando valor do tronco:', {
+        id,
+        amount: numericAmount,
+        month,
+        year,
+        date: date.toISOString()
+      });
+
       // Registra o valor do tronco na sessão
       const { error: sessionError } = await supabase
         .from("sessions")
         .update({ daily_trunk_amount: numericAmount })
         .eq("id", id);
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Erro ao atualizar sessão:', sessionError);
+        throw sessionError;
+      }
+
+      console.log('Sessão atualizada com sucesso');
 
       // Cria a movimentação no caixa
-      const { error: cashError } = await supabase
+      const { data: cashData, error: cashError } = await supabase
         .from("cash_movements")
         .insert({
           type: "income",
@@ -51,10 +64,17 @@ export function TrunkAmountCell({
           month: month,
           year: year,
           description: `Tronco de Solidariedade - Sessão ${date.toLocaleDateString('pt-BR')}`
-        });
+        })
+        .select();
 
-      if (cashError) throw cashError;
+      if (cashError) {
+        console.error('Erro ao criar movimentação:', cashError);
+        throw cashError;
+      }
 
+      console.log('Movimentação criada com sucesso:', cashData);
+
+      // Invalida os caches para forçar recarregamento
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
       queryClient.invalidateQueries({ queryKey: ["cash-movements"] });
@@ -65,6 +85,7 @@ export function TrunkAmountCell({
 
       onUpdate(id, amount);
     } catch (error: any) {
+      console.error('Erro completo:', error);
       toast({
         variant: "destructive",
         title: "Erro ao atualizar valor",

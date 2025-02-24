@@ -88,6 +88,7 @@ const Index = () => {
     topic: "Regular Session",
     agenda: "Monthly Regular Meeting",
     minutes: "",
+    balaustreUrl: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }));

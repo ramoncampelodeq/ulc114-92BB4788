@@ -78,13 +78,19 @@ export function CashControl() {
       category: CashMovementCategory;
       amount: number;
       description?: string;
+      isRecurring?: boolean;
     }) => {
+      const { isRecurring, ...movementData } = data;
+      
+      // Se for uma movimentação recorrente, salvamos essa informação em um campo adicional
       const { error } = await supabase
         .from("cash_movements")
         .insert([{
-          ...data,
+          ...movementData,
           month: currentMonth,
           year: currentYear,
+          is_recurring: isRecurring, // Será usado pelo trigger para criar as próximas movimentações
+          created_at: new Date().toISOString(),
         }]);
 
       if (error) throw error;

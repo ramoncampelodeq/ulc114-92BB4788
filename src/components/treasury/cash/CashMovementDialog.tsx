@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ interface CashMovementDialogProps {
     category: CashMovementCategory;
     amount: number;
     description?: string;
+    isRecurring?: boolean;
   }) => Promise<void>;
 }
 
@@ -36,6 +38,7 @@ export function CashMovementDialog({
   onSubmit,
 }: CashMovementDialogProps) {
   const [type, setType] = useState<CashMovementType>("income");
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,10 +49,12 @@ export function CashMovementDialog({
       category: formData.get("category") as CashMovementCategory,
       amount: parseFloat(formData.get("amount") as string),
       description: formData.get("description") as string,
+      isRecurring,
     };
 
     await onSubmit(data);
     onClose();
+    setIsRecurring(false); // Reset state
   };
 
   return (
@@ -118,6 +123,20 @@ export function CashMovementDialog({
                 name="description"
                 placeholder="Descreva a movimentação..."
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={(checked) => setIsRecurring(checked as boolean)}
+              />
+              <label
+                htmlFor="recurring"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Repetir movimentação todo mês
+              </label>
             </div>
           </div>
 

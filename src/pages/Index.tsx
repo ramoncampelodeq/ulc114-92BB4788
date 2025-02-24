@@ -83,8 +83,10 @@ const Index = () => {
   const mockSessionData = Array.from({ length: 5 }, (_, i) => ({
     id: `mock-${i}`,
     date: new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    time: "19:00",
     degree: "Master Mason" as const,
     topic: "Regular Session",
+    agenda: "Monthly Regular Meeting",
     minutes: "",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

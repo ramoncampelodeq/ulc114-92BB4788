@@ -11,17 +11,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Edit, UserPlus } from "lucide-react";
+import { Edit, UserPlus, Eye } from "lucide-react";
+import BrotherDetails from "./BrotherDetails";
 
 interface BrotherListProps {
   brothers: Brother[];
-  onEdit: (brother: Brother) => void;
-  onAdd: () => void;
+  onEdit?: (brother: Brother) => void;
+  onAdd?: () => void;
+  viewOnly?: boolean;
 }
 
-export default function BrotherList({ brothers, onEdit, onAdd }: BrotherListProps) {
+export default function BrotherList({ brothers, onEdit, onAdd, viewOnly = false }: BrotherListProps) {
   const [sortField, setSortField] = useState<keyof Brother>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
 
   const sortedBrothers = [...brothers].sort((a, b) => {
     const aValue = a[sortField];
@@ -44,10 +47,12 @@ export default function BrotherList({ brothers, onEdit, onAdd }: BrotherListProp
     <div className="space-y-4 animate-fadeIn">
       <div className="flex justify-between items-center mb-6">
         <h2 className="section-header">Brothers Directory</h2>
-        <Button onClick={onAdd} className="space-x-2">
-          <UserPlus className="h-4 w-4" />
-          <span>Add Brother</span>
-        </Button>
+        {!viewOnly && onAdd && (
+          <Button onClick={onAdd} className="space-x-2">
+            <UserPlus className="h-4 w-4" />
+            <span>Add Brother</span>
+          </Button>
+        )}
       </div>
 
       <div className="rounded-md border">
@@ -89,21 +94,40 @@ export default function BrotherList({ brothers, onEdit, onAdd }: BrotherListProp
                 <TableCell>{brother.degree}</TableCell>
                 <TableCell>{format(new Date(brother.birthDate), "PP")}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(brother)}
-                    className="space-x-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit</span>
-                  </Button>
+                  {viewOnly ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedBrother(brother)}
+                      className="space-x-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View</span>
+                    </Button>
+                  ) : (
+                    onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(brother)}
+                        className="space-x-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Edit</span>
+                      </Button>
+                    )
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <BrotherDetails
+        brother={selectedBrother}
+        onClose={() => setSelectedBrother(null)}
+      />
     </div>
   );
 }

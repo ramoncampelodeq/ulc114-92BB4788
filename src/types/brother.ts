@@ -19,7 +19,7 @@ export type Brother = {
   name: string;
   profession: string;
   degree: MasonicDegree;
-  birthDate: string;
+  birth_date: string; // Changed from birthDate to birth_date to match DB
   dateInitiated: string;
   email: string;
   phone: string;

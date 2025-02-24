@@ -44,7 +44,7 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
               <TableCell>{brother.degree}</TableCell>
               <TableCell>{brother.profession}</TableCell>
               <TableCell>
-                {formatDate(brother.birthDate)}
+                {formatDate(brother.birth_date)}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

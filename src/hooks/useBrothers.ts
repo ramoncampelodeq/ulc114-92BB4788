@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Brother, MasonicDegree } from "@/types/brother";
@@ -49,17 +50,18 @@ export function useBrothers() {
 
         if (brotherError) throw brotherError;
 
+        const role = String(formData.get('role'));
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ role: formData.get('role') })
+          .update({ role })
           .eq('id', selectedBrother.id);
 
         if (profileError) throw profileError;
 
         toast.success('Irmão atualizado com sucesso');
       } else {
-        const password = formData.get('password') as string;
-        const role = formData.get('role') as string;
+        const password = String(formData.get('password'));
+        const role = String(formData.get('role'));
         
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: brotherData.email,
@@ -88,7 +90,7 @@ export function useBrothers() {
 
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ role: role })
+          .update({ role })
           .eq('id', authData.user.id);
 
         if (profileError) throw profileError;

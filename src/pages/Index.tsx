@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Brother, BrotherFormData } from "@/types/brother";
 import BrotherList from "@/components/brothers/BrotherList";
 import BirthdayList from "@/components/brothers/BirthdayList";
@@ -9,89 +9,107 @@ import { useToast } from "@/components/ui/use-toast";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import TreasuryReport from "@/components/reports/TreasuryReport";
 import AttendanceReport from "@/components/reports/AttendanceReport";
+import { fetchBrothers, fetchSessions, fetchAttendance, fetchMonthlyDues, createBrother, updateBrother } from "@/lib/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const Index = () => {
-  const [brothers, setBrothers] = useState<Brother[]>([]);
   const [editingBrother, setEditingBrother] = useState<Brother | undefined>();
   const [isAddingBrother, setIsAddingBrother] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleAddBrother = (data: BrotherFormData) => {
-    const newBrother: Brother = {
-      ...data,
-      id: Math.random().toString(36).substr(2, 9),
-      higherDegrees: [],
-      relatives: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  // Fetch data using React Query
+  const { data: brothers = [] } = useQuery({
+    queryKey: ['brothers'],
+    queryFn: fetchBrothers,
+  });
 
-    setBrothers([...brothers, newBrother]);
-    setIsAddingBrother(false);
-    toast({
-      title: "Brother Added",
-      description: "The new brother has been successfully added to the directory.",
-    });
+  const { data: sessions = [] } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: fetchSessions,
+  });
+
+  const { data: attendance = [] } = useQuery({
+    queryKey: ['attendance'],
+    queryFn: fetchAttendance,
+  });
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ['monthly-dues'],
+    queryFn: fetchMonthlyDues,
+  });
+
+  const handleAddBrother = async (data: BrotherFormData) => {
+    try {
+      await createBrother(data);
+      queryClient.invalidateQueries({ queryKey: ['brothers'] });
+      setIsAddingBrother(false);
+      toast({
+        title: "Brother Added",
+        description: "The new brother has been successfully added to the directory.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add brother. Please try again.",
+      });
+    }
   };
 
-  const handleUpdateBrother = (data: BrotherFormData) => {
+  const handleUpdateBrother = async (data: BrotherFormData) => {
     if (!editingBrother) return;
 
-    const updatedBrother: Brother = {
-      ...editingBrother,
-      ...data,
-      updatedAt: new Date().toISOString(),
-    };
-
-    setBrothers(
-      brothers.map((b) => (b.id === editingBrother.id ? updatedBrother : b))
-    );
-    setEditingBrother(undefined);
-    toast({
-      title: "Brother Updated",
-      description: "The brother's information has been successfully updated.",
-    });
+    try {
+      await updateBrother(editingBrother.id, data);
+      queryClient.invalidateQueries({ queryKey: ['brothers'] });
+      setEditingBrother(undefined);
+      toast({
+        title: "Brother Updated",
+        description: "The brother's information has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update brother. Please try again.",
+      });
+    }
   };
 
-  // Mock data for demonstration
-  const mockAttendanceData = brothers.map((brother) => ({
-    brother,
-    totalSessions: 10,
-    attendedSessions: Math.floor(Math.random() * 11),
-    participationPercentage: Math.random() * 100,
-    lastAttendance: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
-  }));
+  // Calculate attendance records
+  const attendanceRecords = brothers.map((brother) => {
+    const brotherAttendance = attendance.filter((a) => a.brotherId === brother.id);
+    const totalSessions = sessions.length;
+    const attendedSessions = brotherAttendance.filter((a) => a.present).length;
+    const participationPercentage = (attendedSessions / totalSessions) * 100;
+    const lastAttendance = brotherAttendance
+      .filter((a) => a.present)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.createdAt;
 
-  const mockPaymentData = brothers.map((brother) => ({
-    brother,
-    payments: [],
-    overdueCount: Math.floor(Math.random() * 3),
-    lastPayment: brother.id.length % 2 === 0 ? {
-      id: "mock",
-      brotherId: brother.id,
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      amount: 100,
-      status: "paid" as const,
-      paidAt: new Date().toISOString(),
-      dueDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } : undefined,
-  }));
+    return {
+      brother,
+      totalSessions,
+      attendedSessions,
+      participationPercentage,
+      lastAttendance,
+    };
+  });
 
-  const mockSessionData = Array.from({ length: 5 }, (_, i) => ({
-    id: `mock-${i}`,
-    date: new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toISOString(),
-    time: "19:00",
-    degree: "Master Mason" as const,
-    topic: "Regular Session",
-    agenda: "Monthly Regular Meeting",
-    minutes: "",
-    balaustreUrl: undefined,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
+  // Calculate payment records
+  const paymentRecords = brothers.map((brother) => {
+    const brotherPayments = payments.filter((p) => p.brotherId === brother.id);
+    const overdueCount = brotherPayments.filter((p) => p.status === "overdue").length;
+    const lastPayment = brotherPayments
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+    return {
+      brother,
+      payments: brotherPayments,
+      overdueCount,
+      lastPayment,
+    };
+  });
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -127,9 +145,9 @@ const Index = () => {
           <TabsContent value="dashboard" className="mt-6">
             <AdminDashboard
               brothers={brothers}
-              sessions={mockSessionData}
-              payments={mockPaymentData}
-              attendance={mockAttendanceData}
+              sessions={sessions}
+              payments={paymentRecords}
+              attendance={attendanceRecords}
               onAddBrother={() => setIsAddingBrother(true)}
               onAddSession={() => {}}
               onManageAttendance={() => {}}
@@ -150,11 +168,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="attendance" className="mt-6">
-            <AttendanceReport records={mockAttendanceData} />
+            <AttendanceReport records={attendanceRecords} />
           </TabsContent>
 
           <TabsContent value="treasury" className="mt-6">
-            <TreasuryReport records={mockPaymentData} />
+            <TreasuryReport records={paymentRecords} />
           </TabsContent>
         </Tabs>
       )}

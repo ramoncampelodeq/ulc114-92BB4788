@@ -17,7 +17,11 @@ export function OverdueList() {
   const { data: overduePayments, isLoading } = useQuery<OverdueBrother[]>({
     queryKey: ["overdue-payments"],
     queryFn: async () => {
-      // Buscar todas as mensalidades vencidas (status overdue ou pending com data vencida)
+      // Primeiro, vamos fazer um log da data atual para debug
+      const now = new Date();
+      console.log("Data atual:", now.toISOString());
+
+      // Buscar todas as mensalidades pendentes ou vencidas
       const { data, error } = await supabase
         .from("monthly_dues")
         .select(`
@@ -33,7 +37,8 @@ export function OverdueList() {
           amount,
           status
         `)
-        .or('status.eq.overdue,and(status.eq.pending,due_date.lt.now)')
+        .in('status', ['pending', 'overdue'])
+        .lt('due_date', now.toISOString())
         .order('due_date');
 
       if (error) {
@@ -41,7 +46,22 @@ export function OverdueList() {
         throw error;
       }
 
+      // Log detalhado dos resultados
+      console.log("Query SQL:", (data as any)?.query);
       console.log("Overdue payments raw data:", data);
+      
+      if (!data || data.length === 0) {
+        console.log("Nenhum pagamento vencido encontrado na query inicial");
+        
+        // Vamos fazer uma query adicional para debug
+        const { data: allDues, error: allDuesError } = await supabase
+          .from("monthly_dues")
+          .select('id, status, due_date')
+          .limit(10);
+          
+        console.log("Amostra de todas as mensalidades:", allDues);
+        if (allDuesError) console.error("Erro ao buscar amostra:", allDuesError);
+      }
 
       // Agrupar por irmão
       const groupedByBrother = (data || []).reduce<Record<string, OverdueBrother>>((acc, payment) => {

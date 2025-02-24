@@ -6,6 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { PaymentFormData } from "../types";
 import type { Database } from "@/integrations/supabase/types";
+import { ptBR } from "date-fns/locale";
 
 type CashMovementInsert = Database['public']['Tables']['cash_movements']['Insert'];
 
@@ -34,6 +35,18 @@ export function usePaymentForm() {
       if (!data.brotherId || data.months.length === 0 || !data.amount) {
         console.error('Dados inválidos:', { data });
         throw new Error("Dados inválidos para o pagamento");
+      }
+
+      // Buscar informações do irmão
+      const { data: brotherData, error: brotherError } = await supabase
+        .from("brothers")
+        .select('name')
+        .eq('id', data.brotherId)
+        .single();
+
+      if (brotherError) {
+        console.error('Erro ao buscar informações do irmão:', brotherError);
+        throw brotherError;
       }
 
       // Verificar pagamentos existentes
@@ -86,7 +99,7 @@ export function usePaymentForm() {
           amount: Number(data.amount),
           month,
           year: Number(data.year),
-          description: `Mensalidade - Mês ${month}/${data.year}`
+          description: `Mensalidade - ${brotherData.name} - ${format(new Date(data.year, month - 1), "MMMM 'de' yyyy", { locale: ptBR })}`
         }));
 
         console.log('Tentando inserir movimentações:', cashMovements);

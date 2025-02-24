@@ -4,33 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Brother, MasonicDegree } from "@/types/brother";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { BrotherDialog } from "@/components/brothers/BrotherDialog";
+import { BrothersTable } from "@/components/brothers/BrothersTable";
 
 const Brothers = () => {
   const navigate = useNavigate();
@@ -156,109 +133,12 @@ const Brothers = () => {
           </Button>
           <h1 className="text-2xl font-semibold">Irmãos</h1>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setSelectedBrother(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Irmão
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedBrother ? 'Editar Irmão' : 'Novo Irmão'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    defaultValue={selectedBrother?.name}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={selectedBrother?.email}
-                    required
-                  />
-                </div>
-                {!selectedBrother && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                )}
-                <div className="grid gap-2">
-                  <Label htmlFor="profession">Profissão</Label>
-                  <Input
-                    id="profession"
-                    name="profession"
-                    defaultValue={selectedBrother?.profession}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="degree">Grau</Label>
-                  <Select name="degree" defaultValue={selectedBrother?.degree || "Apprentice"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o grau" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Apprentice">Aprendiz</SelectItem>
-                      <SelectItem value="Fellow Craft">Companheiro</SelectItem>
-                      <SelectItem value="Master Mason">Mestre</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="birth_date">Data de Nascimento</Label>
-                  <Input
-                    id="birth_date"
-                    name="birth_date"
-                    type="date"
-                    defaultValue={selectedBrother?.birthDate}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    defaultValue={selectedBrother?.phone}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {selectedBrother ? 'Salvar' : 'Criar'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <BrotherDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          selectedBrother={selectedBrother}
+          onSubmit={handleSubmit}
+        />
       </div>
 
       {loading ? (
@@ -268,49 +148,11 @@ const Brothers = () => {
           Nenhum irmão cadastrado
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Grau</TableHead>
-                <TableHead>Profissão</TableHead>
-                <TableHead>Data de Nascimento</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {brothers.map((brother) => (
-                <TableRow key={brother.id}>
-                  <TableCell>{brother.name}</TableCell>
-                  <TableCell>{brother.degree}</TableCell>
-                  <TableCell>{brother.profession}</TableCell>
-                  <TableCell>
-                    {format(new Date(brother.birthDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(brother)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(brother.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <BrothersTable
+          brothers={brothers}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       )}
     </div>
   );

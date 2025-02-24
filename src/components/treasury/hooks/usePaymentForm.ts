@@ -70,15 +70,16 @@ export function usePaymentForm() {
         // Criar movimentações de caixa se o pagamento foi registrado como pago
         if (data.status === 'paid') {
           const cashMovements: CashMovementInsert[] = data.months.map(month => ({
-            type: 'income',
-            category: 'monthly_fee',
-            amount: Number(data.amount), // Garantir que amount seja número
+            type: 'income' as const,
+            category: 'monthly_fee' as const,
+            amount: Number(data.amount),
             month,
-            year: Number(data.year), // Garantir que year seja número
-            description: `Mensalidade - Mês ${month}/${data.year}`
+            year: Number(data.year),
+            description: `Mensalidade - Mês ${month}/${data.year}`,
+            created_at: new Date().toISOString()
           }));
 
-          console.log('Inserindo movimentações:', cashMovements);
+          console.log('Inserindo movimentações:', JSON.stringify(cashMovements, null, 2));
 
           const { error: cashError } = await supabase
             .from("cash_movements")

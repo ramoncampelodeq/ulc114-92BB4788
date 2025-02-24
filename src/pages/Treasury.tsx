@@ -53,7 +53,7 @@ const Treasury = () => {
       }
 
       setIsAdmin(data?.role === "admin");
-      if (!data?.role === "admin") {
+      if (data?.role !== "admin") {
         setSelectedTab("personal");
       }
     };

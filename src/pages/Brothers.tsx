@@ -1,13 +1,18 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Brother, MasonicDegree } from "@/types/brother";
+import { Brother } from "@/types/brother";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import {
+  Users,
+  CalendarDays,
+  UserCheck,
+  DollarSign,
+  LogOut,
+} from "lucide-react";
 import { BrotherDialog } from "@/components/brothers/BrotherDialog";
 import { BrothersTable } from "@/components/brothers/BrothersTable";
+import { toast } from "sonner";
 
 const Brothers = () => {
   const navigate = useNavigate();
@@ -15,6 +20,29 @@ const Brothers = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const menuItems = [
+    {
+      title: "Irmãos",
+      icon: <Users className="h-5 w-5" />,
+      onClick: () => navigate("/brothers"),
+    },
+    {
+      title: "Sessões",
+      icon: <CalendarDays className="h-5 w-5" />,
+      onClick: () => navigate("/sessions"),
+    },
+    {
+      title: "Presenças",
+      icon: <UserCheck className="h-5 w-5" />,
+      onClick: () => navigate("/attendance"),
+    },
+    {
+      title: "Tesouraria",
+      icon: <DollarSign className="h-5 w-5" />,
+      onClick: () => navigate("/treasury"),
+    },
+  ];
 
   useEffect(() => {
     fetchBrothers();
@@ -61,7 +89,6 @@ const Brothers = () => {
         if (error) throw error;
         toast.success('Irmão atualizado com sucesso');
       } else {
-        // Primeiro, criar o usuário no auth
         const password = formData.get('password') as string;
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: brotherData.email,
@@ -78,7 +105,6 @@ const Brothers = () => {
 
         if (!authData.user) throw new Error('Erro ao criar usuário');
 
-        // Depois, criar o registro na tabela brothers vinculado ao usuário criado
         const { error: brotherError } = await supabase
           .from('brothers')
           .insert([{ 
@@ -110,12 +136,9 @@ const Brothers = () => {
     if (!confirm('Tem certeza que deseja excluir este irmão?')) return;
 
     try {
-      // Primeiro deletar o usuário do auth
       const { error: authError } = await supabase.auth.admin.deleteUser(id);
       if (authError) throw authError;
 
-      // O registro na tabela brothers será deletado automaticamente pela foreign key cascade
-      
       toast.success('Irmão removido com sucesso');
       fetchBrothers();
     } catch (error) {
@@ -125,35 +148,70 @@ const Brothers = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-semibold">Irmãos</h1>
-        </div>
-        <BrotherDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          selectedBrother={selectedBrother}
-          onSubmit={handleSubmit}
-        />
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b sticky top-0 z-50 bg-background">
+        <div className="flex h-16 items-center px-4 md:px-8">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
+              alt="ULC 114 Logo" 
+              className="h-10 w-10"
+            />
+            <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
+          </div>
+          
+          <div className="flex items-center space-x-2 ml-8">
+            {menuItems.map((item) => (
+              <Button
+                key={item.title}
+                variant={item.title === "Irmãos" ? "default" : "ghost"}
+                className="flex items-center gap-2"
+                onClick={item.onClick}
+              >
+                {item.icon}
+                {item.title}
+              </Button>
+            ))}
+          </div>
 
-      {loading ? (
-        <div>Carregando...</div>
-      ) : brothers.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Nenhum irmão cadastrado
+          <div className="ml-auto flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => supabase.auth.signOut()}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
-      ) : (
-        <BrothersTable
-          brothers={brothers}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      </header>
+
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center justify-between mb-8">
+          <BrotherDialog
+            isOpen={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            selectedBrother={selectedBrother}
+            onSubmit={handleSubmit}
+          />
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Carregando...
+          </div>
+        ) : brothers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nenhum irmão cadastrado
+          </div>
+        ) : (
+          <BrothersTable
+            brothers={brothers}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
     </div>
   );
 };

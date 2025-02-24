@@ -1,7 +1,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { Payment } from "@/types/payment";
+import { Payment, PaymentStatus } from "@/types/payment";
 import { CriticalOverdueBrother } from "@/types/brother";
 
 const supabaseUrl = "https://nxoixikuzrofjmvacsfz.supabase.co";
@@ -61,11 +61,11 @@ export const fetchMonthlyDues = async (): Promise<Payment[]> => {
     month: item.month,
     year: item.year,
     amount: item.amount,
-    status: item.status,
+    status: item.status as PaymentStatus,
     paidAt: item.paid_at,
     dueDate: item.due_date,
     createdAt: item.created_at,
-    updatedAt: item.created_at // Using created_at since we don't have updated_at
+    updatedAt: item.created_at
   }));
 };
 
@@ -109,11 +109,11 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
     month: item.month,
     year: item.year,
     amount: item.amount,
-    status: item.status,
+    status: item.status as PaymentStatus,
     paidAt: item.paid_at,
     dueDate: item.due_date,
     createdAt: item.created_at,
-    updatedAt: item.created_at // Using created_at since we don't have updated_at
+    updatedAt: item.created_at
   }));
 };
 

@@ -62,6 +62,17 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado");
 
+  // Primeiro, buscar o id do irmão associado ao usuário
+  const { data: brotherData, error: brotherError } = await supabase
+    .from("brothers")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (brotherError) throw brotherError;
+  if (!brotherData) throw new Error("Irmão não encontrado");
+
+  // Agora buscar os pagamentos usando o brother_id
   const { data, error } = await supabase
     .from("monthly_dues")
     .select(`
@@ -84,7 +95,7 @@ export const fetchPersonalPayments = async (): Promise<Payment[]> => {
         phone
       )
     `)
-    .eq("brother:brothers.user_id", user.id)
+    .eq("brother_id", brotherData.id)
     .order("year", { ascending: false })
     .order("month", { ascending: false });
 

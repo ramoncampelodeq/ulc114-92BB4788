@@ -26,10 +26,11 @@ const Auth = () => {
       );
       navigate('/');
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Invalid email or password.",
+        title: "Erro",
+        description: "Email ou senha inválidos.",
       });
     } finally {
       setIsLoading(false);
@@ -48,14 +49,15 @@ const Auth = () => {
         formData.get('username') as string
       );
       toast({
-        title: "Success",
-        description: "Please check your email to verify your account.",
+        title: "Sucesso",
+        description: "Por favor, verifique seu email para confirmar sua conta.",
       });
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to create account. Please try again.",
+        title: "Erro",
+        description: "Falha ao criar conta. Por favor, tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -67,13 +69,13 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-serif text-primary mb-2">ULC 114</CardTitle>
-          <CardDescription>Manage your masonic lodge efficiently</CardDescription>
+          <CardDescription>Gerenciamento da loja maçônica</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="space-y-6">
             <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="signin">Entrar</TabsTrigger>
+              <TabsTrigger value="signup">Cadastrar</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
@@ -83,11 +85,11 @@ const Auth = () => {
                   <Input id="signin-email" name="email" type="email" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password">Senha</Label>
                   <Input id="signin-password" name="password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
               </form>
             </TabsContent>
@@ -99,15 +101,15 @@ const Auth = () => {
                   <Input id="signup-email" name="email" type="email" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-username">Username</Label>
+                  <Label htmlFor="signup-username">Nome de usuário</Label>
                   <Input id="signup-username" name="username" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password">Senha</Label>
                   <Input id="signup-password" name="password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Sign Up"}
+                  {isLoading ? "Criando conta..." : "Cadastrar"}
                 </Button>
               </form>
             </TabsContent>

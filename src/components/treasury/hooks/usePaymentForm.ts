@@ -61,8 +61,8 @@ export function usePaymentForm() {
       // Se o pagamento foi registrado como pago, criar movimentações no caixa
       if (data.status === 'paid') {
         const cashMovements = data.months.map(month => ({
-          type: "income" as CashMovementType,
-          category: "monthly_fee" as CashMovementCategory,
+          type: "income" as const,
+          category: "monthly_fee" as const,
           amount: data.amount,
           month: month,
           year: data.year,

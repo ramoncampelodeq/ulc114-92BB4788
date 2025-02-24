@@ -41,22 +41,6 @@ export function usePaymentForm() {
         throw new Error("Usuário não autenticado");
       }
 
-      // Verificar se o usuário é admin diretamente na tabela profiles
-      const { data: userProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        console.error('Erro ao verificar perfil:', profileError);
-        throw new Error("Erro ao verificar permissões do usuário");
-      }
-
-      if (!userProfile || userProfile.role !== 'admin') {
-        throw new Error("Apenas administradores podem registrar pagamentos");
-      }
-
       try {
         // Verificar pagamentos existentes
         const { data: existingPayments, error: checkError } = await supabase
@@ -89,7 +73,10 @@ export function usePaymentForm() {
           .from("monthly_dues")
           .insert(payments);
       
-        if (paymentsError) throw paymentsError;
+        if (paymentsError) {
+          console.error('Erro ao inserir pagamentos:', paymentsError);
+          throw paymentsError;
+        }
 
         // Criar movimentações de caixa se o pagamento foi registrado como pago
         if (data.status === 'paid') {

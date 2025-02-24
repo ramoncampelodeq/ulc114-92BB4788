@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -20,34 +20,46 @@ import { toast } from "@/components/ui/use-toast";
 const MonthlyDues = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("personal");
-  
-  const { data: profile } = useQuery({
-    queryKey: ["user-profile"],
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const { data: session } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return session;
+    },
+  });
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!session?.user?.id) return;
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+        .select("role")
+        .eq("id", session.user.id)
         .single();
 
       if (error) {
-        console.error("Erro ao buscar perfil:", error);
-        return null;
+        console.error("Erro ao verificar perfil:", error);
+        return;
       }
 
-      return data;
+      setIsAdmin(data?.role === "admin");
+      if (data?.role === "admin" && selectedTab === "personal") {
+        setSelectedTab("register");
+      }
+    };
+
+    checkAdminStatus();
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (!isAdmin && selectedTab !== "personal") {
+      setSelectedTab("personal");
     }
-  });
-
-  const isAdmin = profile?.role === 'admin';
-
-  // Se não for admin e tentar acessar abas restritas, volta para "personal"
-  if (!isAdmin && selectedTab !== "personal") {
-    setSelectedTab("personal");
-  }
+  }, [isAdmin, selectedTab]);
 
   return (
     <div className="container mx-auto py-8 px-4">

@@ -60,23 +60,34 @@ export function usePaymentForm() {
 
       // Se o pagamento foi registrado como pago, criar movimentações no caixa
       if (data.status === 'paid') {
-        const cashMovements = data.months.map(month => {
-          const movement = {
-            type: "income" as CashMovementType,
-            category: "monthly_fee" as CashMovementCategory,
-            amount: data.amount,
-            month: month,
-            year: data.year,
-            description: `Mensalidade - Mês ${month}/${data.year}`
-          };
-          return movement;
-        });
+        interface CashMovementInsert {
+          type: CashMovementType;
+          category: CashMovementCategory;
+          amount: number;
+          month: number;
+          year: number;
+          description: string;
+        }
+
+        const cashMovements: CashMovementInsert[] = data.months.map(month => ({
+          type: "income",
+          category: "monthly_fee",
+          amount: data.amount,
+          month: month,
+          year: data.year,
+          description: `Mensalidade - Mês ${month}/${data.year}`
+        }));
+
+        console.log('Cash movements to be inserted:', cashMovements);
 
         const { error: cashError } = await supabase
           .from("cash_movements")
           .insert(cashMovements);
 
-        if (cashError) throw cashError;
+        if (cashError) {
+          console.error('Error inserting cash movements:', cashError);
+          throw cashError;
+        }
       }
     },
     onSuccess: () => {

@@ -224,6 +224,7 @@ export type Database = {
         Row: {
           agenda: string
           created_at: string | null
+          daily_trunk_amount: number | null
           date: string
           degree: string
           id: string
@@ -235,6 +236,7 @@ export type Database = {
         Insert: {
           agenda: string
           created_at?: string | null
+          daily_trunk_amount?: number | null
           date: string
           degree: string
           id?: string
@@ -246,6 +248,7 @@ export type Database = {
         Update: {
           agenda?: string
           created_at?: string | null
+          daily_trunk_amount?: number | null
           date?: string
           degree?: string
           id?: string

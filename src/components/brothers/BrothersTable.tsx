@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface BrothersTableProps {
@@ -19,6 +19,12 @@ interface BrothersTableProps {
 }
 
 export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps) {
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    const date = parseISO(dateString);
+    return isValid(date) ? format(date, 'dd/MM/yyyy') : '-';
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -38,7 +44,7 @@ export function BrothersTable({ brothers, onEdit, onDelete }: BrothersTableProps
               <TableCell>{brother.degree}</TableCell>
               <TableCell>{brother.profession}</TableCell>
               <TableCell>
-                {format(new Date(brother.birthDate), 'dd/MM/yyyy')}
+                {formatDate(brother.birthDate)}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

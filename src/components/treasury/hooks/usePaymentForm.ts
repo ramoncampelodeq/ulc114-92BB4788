@@ -41,18 +41,15 @@ export function usePaymentForm() {
         throw new Error("Usuário não autenticado");
       }
 
-      // Verificar se o usuário é admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      // Verificar se o usuário é admin usando a função is_admin()
+      const { data: isAdmin, error: adminCheckError } = await supabase
+        .rpc('is_admin');
 
-      if (profileError || !profile) {
+      if (adminCheckError) {
         throw new Error("Erro ao verificar permissões do usuário");
       }
 
-      if (profile.role !== 'admin') {
+      if (!isAdmin) {
         throw new Error("Apenas administradores podem registrar pagamentos");
       }
 

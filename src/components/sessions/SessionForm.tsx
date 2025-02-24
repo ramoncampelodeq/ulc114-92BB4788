@@ -39,10 +39,11 @@ export function SessionForm({
       date: formData.get("date") as string,
       time: formData.get("time") as string,
       degree: formData.get("degree") as "aprendiz" | "companheiro" | "mestre",
+      type: formData.get("type") as "ordinaria" | "administrativa" | "branca" | "magna",
       agenda: formData.get("agenda") as string,
     };
 
-    console.log("Form data being submitted:", data); // Debug log
+    console.log("Form data being submitted:", data);
     await onSubmit(data);
     onClose();
   };
@@ -93,6 +94,25 @@ export function SessionForm({
                   <SelectItem value="aprendiz">Aprendiz</SelectItem>
                   <SelectItem value="companheiro">Companheiro</SelectItem>
                   <SelectItem value="mestre">Mestre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="type">Tipo</Label>
+              <Select 
+                name="type" 
+                defaultValue={session?.type || "ordinaria"}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ordinaria">Ordinária</SelectItem>
+                  <SelectItem value="administrativa">Administrativa</SelectItem>
+                  <SelectItem value="branca">Branca</SelectItem>
+                  <SelectItem value="magna">Magna</SelectItem>
                 </SelectContent>
               </Select>
             </div>

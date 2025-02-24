@@ -1,7 +1,6 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Search } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -49,17 +48,14 @@ const Attendance = () => {
         `)
         .order("date", { ascending: false });
 
-      // Filtro por grau
       if (selectedDegree !== "all") {
         query = query.eq("degree", selectedDegree);
       }
 
-      // Filtro por tipo
       if (selectedType !== "all") {
         query = query.eq("type", selectedType);
       }
 
-      // Filtro por período
       if (selectedPeriod !== "all") {
         const monthsAgo = subMonths(new Date(), parseInt(selectedPeriod));
         query = query.gte("date", monthsAgo.toISOString());
@@ -84,7 +80,6 @@ const Attendance = () => {
     }
   });
 
-  // Query para buscar a lista de irmãos
   const { data: brothers } = useQuery({
     queryKey: ["brothers"],
     queryFn: async () => {
@@ -143,7 +138,6 @@ const Attendance = () => {
     link.click();
   };
 
-  // Filtra a lista de irmãos baseado no termo de busca
   const filteredBrothers = brothers?.filter(brother =>
     brother.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -232,19 +226,7 @@ const Attendance = () => {
           </Select>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar irmão..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
-
-        <div className="w-[200px]">
+        <div className="w-[300px]">
           <Select
             value={selectedBrother?.id ?? ""}
             onValueChange={(value) => {
@@ -256,6 +238,14 @@ const Attendance = () => {
               <SelectValue placeholder="Selecionar irmão" />
             </SelectTrigger>
             <SelectContent>
+              <div className="p-2">
+                <Input
+                  placeholder="Buscar irmão..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="mb-2"
+                />
+              </div>
               {filteredBrothers?.map((brother) => (
                 <SelectItem key={brother.id} value={brother.id}>
                   {brother.name}
@@ -268,7 +258,6 @@ const Attendance = () => {
 
       {sessions && sessions.length > 0 ? (
         <div className="space-y-6">
-          {/* Gráfico de presenças */}
           <div className="bg-card p-4 rounded-lg border">
             <h2 className="text-lg font-semibold mb-4">Evolução das Presenças</h2>
             <div className="h-[300px]">
@@ -288,7 +277,6 @@ const Attendance = () => {
             </div>
           </div>
 
-          {/* Tabela de presenças */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -340,7 +328,6 @@ const Attendance = () => {
         </div>
       )}
 
-      {/* Relatório individual */}
       <AttendanceReport
         brother={selectedBrother}
         isOpen={!!selectedBrother}

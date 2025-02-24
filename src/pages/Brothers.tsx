@@ -86,20 +86,39 @@ const Brothers = () => {
         if (error) throw error;
         toast.success('Irmão atualizado com sucesso');
       } else {
-        const { error } = await supabase
-          .from('brothers')
-          .insert([brotherData]);
+        // Primeiro, criar o usuário no auth
+        const password = formData.get('password') as string;
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: brotherData.email,
+          password: password,
+          options: {
+            data: {
+              name: brotherData.name,
+              role: 'brother'
+            }
+          }
+        });
 
-        if (error) throw error;
+        if (authError) throw authError;
+
+        if (!authData.user) throw new Error('Erro ao criar usuário');
+
+        // Depois, criar o registro na tabela brothers
+        const { error: brotherError } = await supabase
+          .from('brothers')
+          .insert([{ ...brotherData, id: authData.user.id }]);
+
+        if (brotherError) throw brotherError;
+
         toast.success('Irmão cadastrado com sucesso');
       }
 
       setIsDialogOpen(false);
       setSelectedBrother(null);
       fetchBrothers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving brother:', error);
-      toast.error('Erro ao salvar dados do irmão');
+      toast.error(error.message || 'Erro ao salvar dados do irmão');
     }
   };
 
@@ -112,13 +131,12 @@ const Brothers = () => {
     if (!confirm('Tem certeza que deseja excluir este irmão?')) return;
 
     try {
-      const { error } = await supabase
-        .from('brothers')
-        .delete()
-        .eq('id', id);
+      // Primeiro deletar o usuário do auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(id);
+      if (authError) throw authError;
 
-      if (error) throw error;
-
+      // O registro na tabela brothers será deletado automaticamente pela foreign key cascade
+      
       toast.success('Irmão removido com sucesso');
       fetchBrothers();
     } catch (error) {
@@ -161,6 +179,28 @@ const Brothers = () => {
                   />
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    defaultValue={selectedBrother?.email}
+                    required
+                  />
+                </div>
+                {!selectedBrother && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                )}
+                <div className="grid gap-2">
                   <Label htmlFor="profession">Profissão</Label>
                   <Input
                     id="profession"
@@ -199,16 +239,6 @@ const Brothers = () => {
                     name="dateInitiated"
                     type="date"
                     defaultValue={selectedBrother?.dateInitiated}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={selectedBrother?.email}
                     required
                   />
                 </div>

@@ -57,7 +57,19 @@ export function UserDashboard() {
         .limit(12);
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(item => ({
+        id: item.id,
+        brotherId: item.brother_id,
+        month: item.month,
+        year: item.year,
+        amount: item.amount,
+        status: item.status,
+        paidAt: item.paid_at,
+        dueDate: item.due_date,
+        createdAt: item.created_at,
+        updatedAt: item.created_at
+      }));
     }
   });
 

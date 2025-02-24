@@ -38,7 +38,7 @@ export function SessionForm({
     const data: SessionFormData = {
       date: formData.get("date") as string,
       time: formData.get("time") as string,
-      degree: formData.get("degree") as "Apprentice" | "Fellow Craft" | "Master Mason",
+      degree: formData.get("degree") as "aprendiz" | "companheiro" | "mestre",
       agenda: formData.get("agenda") as string,
     };
 
@@ -82,15 +82,15 @@ export function SessionForm({
               <Label htmlFor="degree">Grau</Label>
               <Select 
                 name="degree" 
-                defaultValue={session?.degree || "Apprentice"}
+                defaultValue={session?.degree || "aprendiz"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o grau" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Apprentice">Aprendiz</SelectItem>
-                  <SelectItem value="Fellow Craft">Companheiro</SelectItem>
-                  <SelectItem value="Master Mason">Mestre</SelectItem>
+                  <SelectItem value="aprendiz">Aprendiz</SelectItem>
+                  <SelectItem value="companheiro">Companheiro</SelectItem>
+                  <SelectItem value="mestre">Mestre</SelectItem>
                 </SelectContent>
               </Select>
             </div>

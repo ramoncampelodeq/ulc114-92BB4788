@@ -2,7 +2,7 @@
 export type SessionFormData = {
   date: string;
   time: string;
-  degree: "Apprentice" | "Fellow Craft" | "Master Mason";
+  degree: "aprendiz" | "companheiro" | "mestre";
   agenda: string;
   minutes_url?: string;
 };
@@ -11,7 +11,7 @@ export type Session = {
   id: string;
   date: string;
   time: string;
-  degree: "Apprentice" | "Fellow Craft" | "Master Mason";
+  degree: "aprendiz" | "companheiro" | "mestre";
   agenda: string;
   minutes_url?: string;
   created_at: string;

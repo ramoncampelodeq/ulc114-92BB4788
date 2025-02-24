@@ -67,11 +67,11 @@ const Sessions = () => {
 
   const getDegreeLabel = (degree: string) => {
     switch (degree) {
-      case "Apprentice":
+      case "aprendiz":
         return "Aprendiz";
-      case "Fellow Craft":
+      case "companheiro":
         return "Companheiro";
-      case "Master Mason":
+      case "mestre":
         return "Mestre";
       default:
         return degree;

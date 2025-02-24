@@ -8,7 +8,13 @@ import { Attendance } from '@/types/attendance';
 const supabaseUrl = 'https://nxoixikuzrofjmvacsfz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54b2l4aWt1enJvZmptdmFjc2Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0NTQ1NzEsImV4cCI6MjA1NTAzMDU3MX0.0CLAC8PzYyhPW1gkO9lIDFAgkjmV3vQDVhZq8qmZfDY';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 // Auth functions
 export async function signUp(email: string, password: string, username: string) {
@@ -21,22 +27,31 @@ export async function signUp(email: string, password: string, username: string) 
       },
     },
   });
-  if (error) throw error;
+  if (error) {
+    console.error('Signup error:', error);
+    throw error;
+  }
+  console.log('Signup successful:', data);
   return data;
 }
 
 export async function signIn(email: string, password: string) {
-  console.log('Attempting login with:', { email }); // Adicionado log
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (error) {
-    console.error('Login error:', error); // Adicionado log de erro
+  console.log('Attempting login with:', { email });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+    console.log('Login successful:', data);
+    return data;
+  } catch (error) {
+    console.error('Login error:', error);
     throw error;
   }
-  console.log('Login successful:', data); // Adicionado log de sucesso
-  return data;
 }
 
 export async function signOut() {

@@ -1,79 +1,24 @@
 
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Users,
-  CalendarDays,
-  UserCheck,
-  DollarSign,
-  LogOut,
-  Download,
-  ArrowLeft,
-} from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { format, subMonths } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { supabase } from "@/lib/supabase";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { subMonths } from "date-fns";
+import { supabase } from "@/lib/supabase";
 import { Brother } from "@/types/brother";
+import { Header } from "@/components/layout/Header";
+import { AttendanceFilters } from "@/components/attendance/AttendanceFilters";
+import { AttendanceChart } from "@/components/attendance/AttendanceChart";
+import { AttendanceTable } from "@/components/attendance/AttendanceTable";
+import { PresentBrothersDialog } from "@/components/attendance/PresentBrothersDialog";
 import { AttendanceReport } from "@/components/attendance/AttendanceReport";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const Attendance = () => {
-  const navigate = useNavigate();
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [presentBrothers, setPresentBrothers] = useState<Brother[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const menuItems = [
-    {
-      title: "Irmãos",
-      icon: <Users className="h-5 w-5" />,
-      onClick: () => navigate("/brothers"),
-    },
-    {
-      title: "Sessões",
-      icon: <CalendarDays className="h-5 w-5" />,
-      onClick: () => navigate("/sessions"),
-    },
-    {
-      title: "Presenças",
-      icon: <UserCheck className="h-5 w-5" />,
-      onClick: () => navigate("/attendance"),
-    },
-    {
-      title: "Tesouraria",
-      icon: <DollarSign className="h-5 w-5" />,
-      onClick: () => navigate("/treasury"),
-    },
-  ];
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["sessions-with-attendance", selectedDegree, selectedType, selectedPeriod],
@@ -138,94 +83,10 @@ const Attendance = () => {
     setIsDialogOpen(true);
   };
 
-  const chartData = sessions?.map(session => ({
-    date: format(new Date(session.date), "dd/MM"),
-    presença: (session.totalPresent / session.totalBrothers) * 100
-  })).reverse();
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "ordinaria":
-        return "Ordinária";
-      case "administrativa":
-        return "Administrativa";
-      case "branca":
-        return "Branca";
-      case "magna":
-        return "Magna";
-      default:
-        return type;
-    }
-  };
-
-  const handleExport = () => {
-    if (!sessions) return;
-
-    const csvContent = [
-      ["Data", "Grau", "Tipo", "Presentes", "Total de Irmãos", "% Presença"].join(","),
-      ...sessions.map(session => {
-        const attendancePercentage = (session.totalPresent / session.totalBrothers) * 100;
-        return [
-          format(new Date(session.date), "dd/MM/yyyy"),
-          session.degree,
-          session.type,
-          session.totalPresent,
-          session.totalBrothers,
-          `${attendancePercentage.toFixed(1)}%`
-        ].join(",");
-      })
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "presenças.csv";
-    link.click();
-  };
-
-  const filteredBrothers = brothers?.filter(brother =>
-    brother.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b sticky top-0 z-50 bg-background">
-          <div className="flex h-16 items-center px-4 md:px-8">
-            <div className="flex items-center gap-2">
-              <img 
-                src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
-                alt="ULC 114 Logo" 
-                className="h-10 w-10"
-              />
-              <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
-            </div>
-            
-            <div className="flex items-center space-x-2 ml-8">
-              {menuItems.map((item) => (
-                <Button
-                  key={item.title}
-                  variant={item.title === "Presenças" ? "default" : "ghost"}
-                  className="flex items-center gap-2"
-                  onClick={item.onClick}
-                >
-                  {item.icon}
-                  {item.title}
-                </Button>
-              ))}
-            </div>
-
-            <div className="ml-auto flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => supabase.auth.signOut()}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </header>
+        <Header currentPage="Presenças" />
         <div className="container mx-auto py-8 px-4">
           <div className="text-center py-8 text-muted-foreground">
             Carregando...
@@ -237,167 +98,25 @@ const Attendance = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b sticky top-0 z-50 bg-background">
-        <div className="flex h-16 items-center px-4 md:px-8">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
-              alt="ULC 114 Logo" 
-              className="h-10 w-10"
-            />
-            <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
-          </div>
-          
-          <div className="flex items-center space-x-2 ml-8">
-            {menuItems.map((item) => (
-              <Button
-                key={item.title}
-                variant={item.title === "Presenças" ? "default" : "ghost"}
-                className="flex items-center gap-2"
-                onClick={item.onClick}
-              >
-                {item.icon}
-                {item.title}
-              </Button>
-            ))}
-          </div>
-
-          <div className="ml-auto flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => supabase.auth.signOut()}
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header currentPage="Presenças" />
 
       <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="w-[200px]">
-            <Select
-              value={selectedDegree}
-              onValueChange={setSelectedDegree}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por grau" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os graus</SelectItem>
-                <SelectItem value="aprendiz">Aprendiz</SelectItem>
-                <SelectItem value="companheiro">Companheiro</SelectItem>
-                <SelectItem value="mestre">Mestre</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-[200px]">
-            <Select
-              value={selectedType}
-              onValueChange={setSelectedType}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                <SelectItem value="ordinaria">Ordinária</SelectItem>
-                <SelectItem value="administrativa">Administrativa</SelectItem>
-                <SelectItem value="branca">Branca</SelectItem>
-                <SelectItem value="magna">Magna</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-[200px]">
-            <Select
-              value={selectedPeriod}
-              onValueChange={setSelectedPeriod}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todo período</SelectItem>
-                <SelectItem value="3">Últimos 3 meses</SelectItem>
-                <SelectItem value="6">Últimos 6 meses</SelectItem>
-                <SelectItem value="12">Último ano</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <AttendanceFilters
+          selectedDegree={selectedDegree}
+          setSelectedDegree={setSelectedDegree}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          selectedPeriod={selectedPeriod}
+          setSelectedPeriod={setSelectedPeriod}
+        />
 
         {sessions && sessions.length > 0 ? (
           <div className="space-y-6">
-            <div className="bg-card p-4 rounded-lg border">
-              <h2 className="text-lg font-semibold mb-4">Evolução das Presenças</h2>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="presença"
-                      stroke="#0ea5e9"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Grau</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Presentes</TableHead>
-                    <TableHead>% Presença</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sessions.map((session) => {
-                    const attendancePercentage = (session.totalPresent / session.totalBrothers) * 100;
-                    
-                    return (
-                      <TableRow 
-                        key={session.id}
-                        className="cursor-pointer hover:bg-muted"
-                        onClick={() => handleSessionClick(session)}
-                      >
-                        <TableCell>
-                          {format(new Date(session.date), "dd 'de' MMMM 'de' yyyy", {
-                            locale: ptBR,
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          {session.degree === "aprendiz"
-                            ? "Aprendiz"
-                            : session.degree === "companheiro"
-                            ? "Companheiro"
-                            : "Mestre"}
-                        </TableCell>
-                        <TableCell>
-                          {getTypeLabel(session.type)}
-                        </TableCell>
-                        <TableCell>
-                          {session.totalPresent} de {session.totalBrothers} irmãos
-                        </TableCell>
-                        <TableCell>
-                          {attendancePercentage.toFixed(1)}%
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <AttendanceChart sessions={sessions} />
+            <AttendanceTable
+              sessions={sessions}
+              onSessionClick={handleSessionClick}
+            />
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
@@ -405,33 +124,12 @@ const Attendance = () => {
           </div>
         )}
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Irmãos Presentes - {selectedSession && format(new Date(selectedSession.date), "dd/MM/yyyy")}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-4">
-              {presentBrothers.length > 0 ? (
-                <div className="space-y-2">
-                  {presentBrothers.map((brother) => (
-                    <div key={brother.id} className="p-2 rounded bg-muted">
-                      <p className="font-medium">{brother.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {brother.degree} - {brother.profession}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground">
-                  Nenhum irmão presente nesta sessão
-                </p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PresentBrothersDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          sessionDate={selectedSession?.date}
+          brothers={presentBrothers}
+        />
 
         <AttendanceReport
           brother={selectedBrother}

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Check, X } from "lucide-react";
 import { Brother } from "@/types/brother";
-import { Payment } from "@/types/payment";
+import { Payment, PaymentStatus } from "@/types/payment";
 import { supabase } from "@/lib/supabase";
 
 export function UserDashboard() {
@@ -64,7 +64,7 @@ export function UserDashboard() {
         month: item.month,
         year: item.year,
         amount: item.amount,
-        status: item.status,
+        status: item.status as PaymentStatus,
         paidAt: item.paid_at,
         dueDate: item.due_date,
         createdAt: item.created_at,

@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FileText, Users } from "lucide-react";
-import { Payment } from "@/types/payment";
+import { Payment, PaymentStatus } from "@/types/payment";
 import { Brother } from "@/types/brother";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
@@ -53,7 +53,7 @@ export function AdminDashboard() {
         month: item.month,
         year: item.year,
         amount: item.amount,
-        status: item.status,
+        status: item.status as PaymentStatus,
         paidAt: item.paid_at,
         dueDate: item.due_date,
         createdAt: item.created_at,

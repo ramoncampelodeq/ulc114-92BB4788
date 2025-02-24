@@ -31,13 +31,11 @@ export function usePaymentForm() {
     mutationFn: async (data: PaymentFormData) => {
       console.log('Iniciando criação de pagamento:', { data });
 
-      // Validação inicial dos dados
       if (!data.brotherId || data.months.length === 0 || !data.amount) {
         console.error('Dados inválidos:', { data });
         throw new Error("Dados inválidos para o pagamento");
       }
 
-      // Verificar pagamentos existentes
       const { data: existingPayments, error: checkError } = await supabase
         .from("monthly_dues")
         .select("month, year")
@@ -59,7 +57,6 @@ export function usePaymentForm() {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user?.id;
 
-      // Criar pagamentos
       const payments = data.months.map(month => ({
         brother_id: data.brotherId,
         month,
@@ -78,11 +75,13 @@ export function usePaymentForm() {
         .insert(payments);
     
       if (paymentsError) {
+        if (paymentsError.code === 'PGRST301') {
+          throw new Error("Permissão negada: apenas administradores podem registrar pagamentos");
+        }
         console.error('Erro ao inserir pagamentos:', paymentsError);
         throw new Error(`Erro ao registrar pagamentos: ${paymentsError.message}`);
       }
 
-      // Criar movimentações de caixa se o pagamento foi registrado como pago
       if (data.status === 'paid') {
         const cashMovements: CashMovementInsert[] = data.months.map(month => ({
           type: 'income',
@@ -102,6 +101,9 @@ export function usePaymentForm() {
           .insert(cashMovements);
 
         if (cashError) {
+          if (cashError.code === 'PGRST301') {
+            throw new Error("Permissão negada: apenas administradores podem registrar movimentações");
+          }
           console.error('Erro ao inserir movimentações:', cashError);
           throw new Error(`Erro ao registrar movimentações: ${cashError.message}`);
         }

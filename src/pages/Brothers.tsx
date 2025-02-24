@@ -91,13 +91,15 @@ const Brothers = () => {
         toast.success('Irmão atualizado com sucesso');
       } else {
         const password = formData.get('password') as string;
+        const role = formData.get('role') as string;
+        
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: brotherData.email,
           password: password,
           options: {
             data: {
               name: brotherData.name,
-              role: 'brother'
+              role: role
             }
           }
         });
@@ -115,6 +117,14 @@ const Brothers = () => {
           }]);
 
         if (brotherError) throw brotherError;
+
+        // Atualizar o perfil do usuário com o papel selecionado
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ role: role })
+          .eq('id', authData.user.id);
+
+        if (profileError) throw profileError;
 
         toast.success('Irmão cadastrado com sucesso');
       }

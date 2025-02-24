@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
@@ -18,9 +18,12 @@ import {
   DollarSign,
   LogOut,
 } from "lucide-react";
+import BirthdayList from "@/components/brothers/BirthdayList";
+import { Brother } from "@/types/brother";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [brothers, setBrothers] = useState<Brother[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -31,6 +34,7 @@ const Index = () => {
     };
 
     checkAuth();
+    fetchBrothers();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
@@ -40,6 +44,20 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const fetchBrothers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brothers')
+        .select('*, relatives (*)');
+      
+      if (error) throw error;
+      
+      setBrothers(data || []);
+    } catch (error) {
+      console.error('Error fetching brothers:', error);
+    }
+  };
 
   const menuItems = [
     {
@@ -72,7 +90,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="flex h-16 items-center px-4 md:px-8">
-          <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
+              alt="ULC 114 Logo" 
+              className="h-10 w-10"
+            />
+            <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
+          </div>
           <div className="ml-auto flex items-center space-x-4">
             <Button 
               variant="ghost" 
@@ -106,14 +131,26 @@ const Index = () => {
           ))}
         </div>
 
-        <ScrollArea className="h-[calc(100vh-20rem)] mt-8 rounded-md border">
-          <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Atividade Recente</h2>
-            <p className="text-muted-foreground">
-              Aqui serão exibidas as atividades recentes da loja.
-            </p>
-          </div>
-        </ScrollArea>
+        <div className="grid gap-8 mt-8 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Atividade Recente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <p className="text-muted-foreground">
+                  Aqui serão exibidas as atividades recentes da loja.
+                </p>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <BirthdayList brothers={brothers} />
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

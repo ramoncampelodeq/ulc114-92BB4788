@@ -29,83 +29,94 @@ export function usePaymentForm() {
 
   const createPaymentMutation = useMutation({
     mutationFn: async (data: PaymentFormData) => {
-      // Validar dados antes de prosseguir
+      console.log('Iniciando criação de pagamento:', { data });
+
+      // Validação inicial dos dados
       if (!data.brotherId || data.months.length === 0 || !data.amount) {
+        console.error('Dados inválidos:', { data });
         throw new Error("Dados inválidos para o pagamento");
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError) {
+        console.error('Erro ao obter sessão:', sessionError);
+        throw new Error("Erro ao verificar autenticação");
+      }
+
+      const userId = sessionData.session?.user?.id;
       if (!userId) {
         throw new Error("Usuário não autenticado");
       }
 
-      try {
-        // Verificar pagamentos existentes
-        const { data: existingPayments, error: checkError } = await supabase
-          .from("monthly_dues")
-          .select("month, year")
-          .eq("brother_id", data.brotherId)
-          .eq("year", data.year)
-          .in("month", data.months);
+      // Verificar pagamentos existentes
+      const { data: existingPayments, error: checkError } = await supabase
+        .from("monthly_dues")
+        .select("month, year")
+        .eq("brother_id", data.brotherId)
+        .eq("year", data.year)
+        .in("month", data.months);
 
-        if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Erro ao verificar pagamentos existentes:', checkError);
+        throw checkError;
+      }
 
-        if (existingPayments && existingPayments.length > 0) {
-          const existingMonths = existingPayments.map(p => p.month);
-          throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
-        }
+      if (existingPayments && existingPayments.length > 0) {
+        const existingMonths = existingPayments.map(p => p.month);
+        console.warn('Pagamentos já existentes:', { existingMonths });
+        throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
+      }
 
-        // Criar pagamentos
-        const payments = data.months.map(month => ({
-          brother_id: data.brotherId,
-          month: month,
-          year: data.year,
-          amount: data.amount,
-          status: data.status,
-          paid_at: data.paidAt,
-          due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd"),
+      // Criar pagamentos
+      const payments = data.months.map(month => ({
+        brother_id: data.brotherId,
+        month,
+        year: data.year,
+        amount: data.amount,
+        status: data.status,
+        paid_at: data.paidAt,
+        due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd"),
+        user_id: userId
+      }));
+
+      console.log('Tentando inserir pagamentos:', { payments });
+
+      const { error: paymentsError } = await supabase
+        .from("monthly_dues")
+        .insert(payments);
+    
+      if (paymentsError) {
+        console.error('Erro ao inserir pagamentos:', paymentsError);
+        throw new Error(`Erro ao registrar pagamentos: ${paymentsError.message}`);
+      }
+
+      // Criar movimentações de caixa se o pagamento foi registrado como pago
+      if (data.status === 'paid') {
+        const cashMovements: CashMovementInsert[] = data.months.map(month => ({
+          type: 'income',
+          category: 'monthly_fee',
+          amount: Number(data.amount),
+          month,
+          year: Number(data.year),
+          description: `Mensalidade - Mês ${month}/${data.year}`,
+          created_at: new Date().toISOString(),
           user_id: userId
         }));
 
-        const { error: paymentsError } = await supabase
-          .from("monthly_dues")
-          .insert(payments);
-      
-        if (paymentsError) {
-          console.error('Erro ao inserir pagamentos:', paymentsError);
-          throw paymentsError;
+        console.log('Tentando inserir movimentações:', cashMovements);
+
+        const { error: cashError } = await supabase
+          .from("cash_movements")
+          .insert(cashMovements);
+
+        if (cashError) {
+          console.error('Erro ao inserir movimentações:', cashError);
+          throw new Error(`Erro ao registrar movimentações: ${cashError.message}`);
         }
-
-        // Criar movimentações de caixa se o pagamento foi registrado como pago
-        if (data.status === 'paid') {
-          const cashMovements: CashMovementInsert[] = data.months.map(month => ({
-            type: 'income' as const,
-            category: 'monthly_fee' as const,
-            amount: Number(data.amount),
-            month,
-            year: Number(data.year),
-            description: `Mensalidade - Mês ${month}/${data.year}`,
-            created_at: new Date().toISOString(),
-            user_id: userId
-          }));
-
-          console.log('Inserindo movimentações:', JSON.stringify(cashMovements, null, 2));
-
-          const { error: cashError } = await supabase
-            .from("cash_movements")
-            .insert(cashMovements);
-
-          if (cashError) {
-            console.error('Erro ao inserir movimentações:', cashError);
-            throw new Error(`Erro ao registrar movimentações: ${cashError.message}`);
-          }
-        }
-      } catch (error) {
-        console.error('Erro completo:', error);
-        throw error;
       }
+
+      console.log('Operação concluída com sucesso');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["monthly-dues"] });
@@ -122,6 +133,7 @@ export function usePaymentForm() {
       resetForm();
     },
     onError: (error: Error) => {
+      console.error('Erro na mutation:', error);
       toast({
         title: "Erro ao registrar pagamentos",
         description: error.message || "Ocorreu um erro ao tentar registrar os pagamentos.",

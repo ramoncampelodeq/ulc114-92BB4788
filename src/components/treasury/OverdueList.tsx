@@ -1,6 +1,5 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -18,6 +17,7 @@ export function OverdueList() {
   const { data: overduePayments, isLoading } = useQuery<OverdueBrother[]>({
     queryKey: ["overdue-payments"],
     queryFn: async () => {
+      // Buscar todas as mensalidades vencidas (status overdue ou pending com data vencida)
       const { data, error } = await supabase
         .from("monthly_dues")
         .select(`
@@ -30,10 +30,11 @@ export function OverdueList() {
           month,
           year,
           due_date,
-          amount
+          amount,
+          status
         `)
-        .eq("status", "overdue")
-        .order("due_date");
+        .or('status.eq.overdue,and(status.eq.pending,due_date.lt.now)')
+        .order('due_date');
 
       if (error) {
         console.error("Error fetching overdue payments:", error);

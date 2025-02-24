@@ -6,7 +6,7 @@ export type PaymentStatus = "pending" | "paid" | "overdue";
 export type Payment = {
   id: string;
   brotherId: string;
-  brother: Brother;
+  brother?: Brother;
   month: number;
   year: number;
   amount: number;

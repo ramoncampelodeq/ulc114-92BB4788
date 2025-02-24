@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Payment } from "@/types/payment";
@@ -36,7 +35,7 @@ export function ReceiptDialog({
             <div className="space-y-2 text-sm">
               <div className="grid grid-cols-2">
                 <span className="text-muted-foreground">Irmão:</span>
-                <span>{payment.brother.name}</span>
+                <span>{payment.brother?.name}</span>
               </div>
               <div className="grid grid-cols-2">
                 <span className="text-muted-foreground">Competência:</span>
@@ -53,7 +52,7 @@ export function ReceiptDialog({
               <div className="grid grid-cols-2">
                 <span className="text-muted-foreground">Data do Pagamento:</span>
                 <span>
-                  {format(new Date(payment.paidAt), "dd/MM/yyyy")}
+                  {payment.paidAt && format(new Date(payment.paidAt), "dd/MM/yyyy")}
                 </span>
               </div>
             </div>

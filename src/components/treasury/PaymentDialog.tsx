@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +52,7 @@ export function PaymentDialog({
           <div className="grid gap-4">
             <div>
               <Label>Irmão</Label>
-              <div className="mt-1.5 text-base">{payment.brother.name}</div>
+              <div className="mt-1.5 text-base">{payment.brother?.name}</div>
             </div>
             
             <div>

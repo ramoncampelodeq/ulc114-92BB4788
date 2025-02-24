@@ -2,7 +2,7 @@
 import { Brother } from "@/types/brother";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Gift, User, Users } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Select,
@@ -52,7 +52,7 @@ export default function BirthdayList({ brothers }: BirthdayListProps) {
 
   // Add brothers' birthdays
   brothers.forEach((brother) => {
-    const birthDate = new Date(brother.birth_date);
+    const birthDate = parseISO(brother.birth_date);
     if (birthDate.getMonth() + 1 === parseInt(selectedMonth)) {
       birthdays.push({
         id: brother.id,
@@ -64,7 +64,7 @@ export default function BirthdayList({ brothers }: BirthdayListProps) {
 
     // Add relatives' birthdays
     brother.relatives.forEach((relative) => {
-      const relativeBirthDate = new Date(relative.birthDate);
+      const relativeBirthDate = parseISO(relative.birthDate);
       if (relativeBirthDate.getMonth() + 1 === parseInt(selectedMonth)) {
         birthdays.push({
           id: relative.id,
@@ -80,8 +80,8 @@ export default function BirthdayList({ brothers }: BirthdayListProps) {
 
   // Sort birthdays by day of month
   birthdays.sort((a, b) => {
-    const dayA = new Date(a.birthDate).getDate();
-    const dayB = new Date(b.birthDate).getDate();
+    const dayA = parseISO(a.birthDate).getDate();
+    const dayB = parseISO(b.birthDate).getDate();
     return dayA - dayB;
   });
 
@@ -121,9 +121,9 @@ export default function BirthdayList({ brothers }: BirthdayListProps) {
             <Card key={person.id} className="card-hover">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium">
-                  {format(new Date(person.birthDate), "d")}
+                  {parseISO(person.birthDate).getDate()}
                   <sup>
-                    {format(new Date(person.birthDate), "do", { locale: ptBR })
+                    {format(parseISO(person.birthDate), "do", { locale: ptBR })
                       .replace(/[0-9]/g, "")
                       .replace("º", "°")}
                   </sup>

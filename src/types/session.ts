@@ -3,6 +3,7 @@ export type SessionFormData = {
   date: string;
   time: string;
   degree: "aprendiz" | "companheiro" | "mestre";
+  type: "ordinaria" | "administrativa" | "branca" | "magna";
   agenda: string;
   minutes_url?: string;
 };
@@ -12,6 +13,7 @@ export type Session = {
   date: string;
   time: string;
   degree: "aprendiz" | "companheiro" | "mestre";
+  type: "ordinaria" | "administrativa" | "branca" | "magna";
   agenda: string;
   minutes_url?: string;
   created_at: string;

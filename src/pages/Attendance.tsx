@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
@@ -29,11 +28,12 @@ import { AttendanceReport } from "@/components/attendance/AttendanceReport";
 const Attendance = () => {
   const navigate = useNavigate();
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedBrother, setSelectedBrother] = useState<Brother | null>(null);
 
   const { data: sessions, isLoading } = useQuery({
-    queryKey: ["sessions-with-attendance", selectedDegree, selectedPeriod],
+    queryKey: ["sessions-with-attendance", selectedDegree, selectedType, selectedPeriod],
     queryFn: async () => {
       let query = supabase
         .from("sessions")
@@ -49,6 +49,11 @@ const Attendance = () => {
       // Filtro por grau
       if (selectedDegree !== "all") {
         query = query.eq("degree", selectedDegree);
+      }
+
+      // Filtro por tipo
+      if (selectedType !== "all") {
+        query = query.eq("type", selectedType);
       }
 
       // Filtro por período
@@ -71,22 +76,8 @@ const Attendance = () => {
         ...session,
         totalPresent: session.attendance?.filter(a => a.present).length || 0,
         totalBrothers: brothersData.length,
-        date: session.date // Adicionado para o gráfico
+        date: session.date
       }));
-    }
-  });
-
-  // Query para buscar a lista de irmãos
-  const { data: brothers } = useQuery({
-    queryKey: ["brothers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("brothers")
-        .select("*")
-        .order("name");
-
-      if (error) throw error;
-      return data;
     }
   });
 
@@ -95,16 +86,32 @@ const Attendance = () => {
     presença: (session.totalPresent / session.totalBrothers) * 100
   })).reverse();
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "ordinaria":
+        return "Ordinária";
+      case "administrativa":
+        return "Administrativa";
+      case "branca":
+        return "Branca";
+      case "magna":
+        return "Magna";
+      default:
+        return type;
+    }
+  };
+
   const handleExport = () => {
     if (!sessions) return;
 
     const csvContent = [
-      ["Data", "Grau", "Presentes", "Total de Irmãos", "% Presença"].join(","),
+      ["Data", "Grau", "Tipo", "Presentes", "Total de Irmãos", "% Presença"].join(","),
       ...sessions.map(session => {
         const attendancePercentage = (session.totalPresent / session.totalBrothers) * 100;
         return [
           format(new Date(session.date), "dd/MM/yyyy"),
           session.degree,
+          session.type,
           session.totalPresent,
           session.totalBrothers,
           `${attendancePercentage.toFixed(1)}%`
@@ -164,6 +171,24 @@ const Attendance = () => {
               <SelectItem value="aprendiz">Aprendiz</SelectItem>
               <SelectItem value="companheiro">Companheiro</SelectItem>
               <SelectItem value="mestre">Mestre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-[200px]">
+          <Select
+            value={selectedType}
+            onValueChange={setSelectedType}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="ordinaria">Ordinária</SelectItem>
+              <SelectItem value="administrativa">Administrativa</SelectItem>
+              <SelectItem value="branca">Branca</SelectItem>
+              <SelectItem value="magna">Magna</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -236,6 +261,7 @@ const Attendance = () => {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Grau</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Presentes</TableHead>
                   <TableHead>% Presença</TableHead>
                 </TableRow>
@@ -257,6 +283,9 @@ const Attendance = () => {
                           : session.degree === "companheiro"
                           ? "Companheiro"
                           : "Mestre"}
+                      </TableCell>
+                      <TableCell>
+                        {getTypeLabel(session.type)}
                       </TableCell>
                       <TableCell>
                         {session.totalPresent} de {session.totalBrothers} irmãos

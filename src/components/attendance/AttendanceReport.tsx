@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import {
@@ -57,6 +56,21 @@ export function AttendanceReport({ brother, isOpen, onClose }: AttendanceReportP
   ).length || 0;
   const attendancePercentage = totalSessions ? (totalPresent / totalSessions) * 100 : 0;
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "ordinaria":
+        return "Ordinária";
+      case "administrativa":
+        return "Administrativa";
+      case "branca":
+        return "Branca";
+      case "magna":
+        return "Magna";
+      default:
+        return type;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
@@ -89,6 +103,7 @@ export function AttendanceReport({ brother, isOpen, onClose }: AttendanceReportP
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Grau</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Presente</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -106,6 +121,9 @@ export function AttendanceReport({ brother, isOpen, onClose }: AttendanceReportP
                           : session.degree === "companheiro"
                           ? "Companheiro"
                           : "Mestre"}
+                      </TableCell>
+                      <TableCell>
+                        {getTypeLabel(session.type)}
                       </TableCell>
                       <TableCell>
                         {session.attendance.some(a => a.present) ? "Sim" : "Não"}

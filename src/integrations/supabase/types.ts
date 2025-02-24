@@ -205,6 +205,7 @@ export type Database = {
           id: string
           minutes_url: string | null
           time: string
+          type: string
           user_id: string | null
         }
         Insert: {
@@ -215,6 +216,7 @@ export type Database = {
           id?: string
           minutes_url?: string | null
           time: string
+          type?: string
           user_id?: string | null
         }
         Update: {
@@ -225,6 +227,7 @@ export type Database = {
           id?: string
           minutes_url?: string | null
           time?: string
+          type?: string
           user_id?: string | null
         }
         Relationships: []

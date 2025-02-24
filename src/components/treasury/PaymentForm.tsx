@@ -19,11 +19,11 @@ import { supabase } from "@/lib/supabase";
 export function PaymentForm() {
   const queryClient = useQueryClient();
   const [selectedBrotherId, setSelectedBrotherId] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [amount, setAmount] = useState("100");
   const [isPaid, setIsPaid] = useState(false);
   const [paidAt, setPaidAt] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
 
   const { data: brothers } = useQuery({
     queryKey: ["brothers"],
@@ -40,41 +40,42 @@ export function PaymentForm() {
   const createPaymentMutation = useMutation({
     mutationFn: async (data: {
       brotherId: string;
-      month: number;
+      months: number[];
       year: number;
       amount: number;
       status: "pending" | "paid";
       paidAt?: string;
     }) => {
-      // Primeiro, verificamos se já existe um pagamento para este mês/ano/irmão
-      const { data: existingPayment, error: checkError } = await supabase
+      const payments = data.months.map(month => ({
+        brother_id: data.brotherId,
+        month: month,
+        year: data.year,
+        amount: data.amount,
+        status: data.status,
+        paid_at: data.paidAt,
+        due_date: format(new Date(data.year, month - 1, 10), "yyyy-MM-dd")
+      }));
+
+      // Check for existing payments
+      const { data: existingPayments, error: checkError } = await supabase
         .from("monthly_dues")
-        .select("id")
+        .select("month, year")
         .eq("brother_id", data.brotherId)
-        .eq("month", data.month)
         .eq("year", data.year)
-        .single();
+        .in("month", data.months);
 
-      if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
+      if (checkError) throw checkError;
+
+      if (existingPayments && existingPayments.length > 0) {
+        const existingMonths = existingPayments.map(p => p.month);
+        const message = `Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`;
+        throw new Error(message);
       }
 
-      if (existingPayment) {
-        throw new Error("Já existe um pagamento registrado para este mês/ano");
-      }
-
-      // Se não existir, criamos o novo pagamento
+      // Create new payments
       const { error } = await supabase
         .from("monthly_dues")
-        .insert([{
-          brother_id: data.brotherId,
-          month: data.month,
-          year: data.year,
-          amount: data.amount,
-          status: data.status,
-          paid_at: data.paidAt,
-          due_date: format(new Date(data.year, data.month - 1, 10), "yyyy-MM-dd")
-        }]);
+        .insert(payments);
       
       if (error) throw error;
     },
@@ -85,38 +86,38 @@ export function PaymentForm() {
       queryClient.invalidateQueries({ queryKey: ["critical-overdue-brothers"] });
       
       toast({
-        title: "Pagamento registrado",
-        description: "O pagamento foi registrado com sucesso."
+        title: "Pagamentos registrados",
+        description: "Os pagamentos foram registrados com sucesso."
       });
       resetForm();
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao registrar pagamento",
-        description: error.message || "Ocorreu um erro ao tentar registrar o pagamento.",
+        title: "Erro ao registrar pagamentos",
+        description: error.message || "Ocorreu um erro ao tentar registrar os pagamentos.",
         variant: "destructive"
       });
     }
   });
 
   const months = [
-    { value: "1", label: "Janeiro" },
-    { value: "2", label: "Fevereiro" },
-    { value: "3", label: "Março" },
-    { value: "4", label: "Abril" },
-    { value: "5", label: "Maio" },
-    { value: "6", label: "Junho" },
-    { value: "7", label: "Julho" },
-    { value: "8", label: "Agosto" },
-    { value: "9", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" }
+    { value: 1, label: "Janeiro" },
+    { value: 2, label: "Fevereiro" },
+    { value: 3, label: "Março" },
+    { value: 4, label: "Abril" },
+    { value: 5, label: "Maio" },
+    { value: 6, label: "Junho" },
+    { value: 7, label: "Julho" },
+    { value: 8, label: "Agosto" },
+    { value: 9, label: "Setembro" },
+    { value: 10, label: "Outubro" },
+    { value: 11, label: "Novembro" },
+    { value: 12, label: "Dezembro" }
   ];
 
   const resetForm = () => {
     setSelectedBrotherId("");
-    setSelectedMonth("");
+    setSelectedMonths([]);
     setSelectedYear(new Date().getFullYear().toString());
     setAmount("100");
     setIsPaid(false);
@@ -125,7 +126,7 @@ export function PaymentForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBrotherId || !selectedMonth || !selectedYear || !amount) {
+    if (!selectedBrotherId || selectedMonths.length === 0 || !selectedYear || !amount) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -136,12 +137,20 @@ export function PaymentForm() {
 
     createPaymentMutation.mutate({
       brotherId: selectedBrotherId,
-      month: parseInt(selectedMonth),
+      months: selectedMonths,
       year: parseInt(selectedYear),
       amount: parseFloat(amount),
       status: isPaid ? "paid" : "pending",
       paidAt: isPaid ? paidAt : undefined
     });
+  };
+
+  const handleMonthToggle = (month: number) => {
+    setSelectedMonths(current =>
+      current.includes(month)
+        ? current.filter(m => m !== month)
+        : [...current, month]
+    );
   };
 
   return (
@@ -164,19 +173,19 @@ export function PaymentForm() {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="month">Mês</Label>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map((month) => (
-                <SelectItem key={month.value} value={month.value}>
-                  {month.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Meses</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {months.map((month) => (
+              <div key={month.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`month-${month.value}`}
+                  checked={selectedMonths.includes(month.value)}
+                  onCheckedChange={() => handleMonthToggle(month.value)}
+                />
+                <Label htmlFor={`month-${month.value}`}>{month.label}</Label>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="grid gap-2">
@@ -192,7 +201,7 @@ export function PaymentForm() {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="amount">Valor</Label>
+          <Label htmlFor="amount">Valor por mensalidade</Label>
           <Input
             id="amount"
             type="number"
@@ -226,7 +235,7 @@ export function PaymentForm() {
       </div>
 
       <Button type="submit" className="w-full">
-        Salvar Pagamento
+        Salvar Pagamento{selectedMonths.length > 0 ? `s (${selectedMonths.length})` : ''}
       </Button>
     </form>
   );

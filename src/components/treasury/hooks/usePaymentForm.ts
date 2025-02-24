@@ -36,10 +36,10 @@ export function usePaymentForm() {
         throw new Error("Dados inválidos para o pagamento");
       }
 
-      // Modificada a consulta para selecionar apenas os campos necessários
+      // Verificar pagamentos existentes
       const { data: existingPayments, error: checkError } = await supabase
         .from("monthly_dues")
-        .select('month, year, id')
+        .select('id, month')
         .eq("brother_id", data.brotherId)
         .eq("year", data.year)
         .in("month", data.months);
@@ -55,6 +55,7 @@ export function usePaymentForm() {
         throw new Error(`Já existem pagamentos registrados para os meses: ${existingMonths.join(", ")}`);
       }
 
+      // Preparar os dados para inserção
       const payments = data.months.map(month => ({
         brother_id: data.brotherId,
         month,
@@ -67,18 +68,17 @@ export function usePaymentForm() {
 
       console.log('Tentando inserir pagamentos:', { payments });
 
+      // Inserir pagamentos
       const { error: paymentsError } = await supabase
         .from("monthly_dues")
         .insert(payments);
     
       if (paymentsError) {
-        if (paymentsError.code === 'PGRST301') {
-          throw new Error("Permissão negada: apenas administradores podem registrar pagamentos");
-        }
         console.error('Erro ao inserir pagamentos:', paymentsError);
         throw new Error(`Erro ao registrar pagamentos: ${paymentsError.message}`);
       }
 
+      // Se o pagamento foi marcado como pago, registrar as movimentações de caixa
       if (data.status === 'paid') {
         const cashMovements: CashMovementInsert[] = data.months.map(month => ({
           type: 'income',
@@ -86,8 +86,7 @@ export function usePaymentForm() {
           amount: Number(data.amount),
           month,
           year: Number(data.year),
-          description: `Mensalidade - Mês ${month}/${data.year}`,
-          created_at: new Date().toISOString()
+          description: `Mensalidade - Mês ${month}/${data.year}`
         }));
 
         console.log('Tentando inserir movimentações:', cashMovements);
@@ -97,9 +96,6 @@ export function usePaymentForm() {
           .insert(cashMovements);
 
         if (cashError) {
-          if (cashError.code === 'PGRST301') {
-            throw new Error("Permissão negada: apenas administradores podem registrar movimentações");
-          }
           console.error('Erro ao inserir movimentações:', cashError);
           throw new Error(`Erro ao registrar movimentações: ${cashError.message}`);
         }

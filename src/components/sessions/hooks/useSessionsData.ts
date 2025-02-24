@@ -132,6 +132,37 @@ export function useSessionsData() {
     }
   };
 
+  const handleEditSession = async (session: Session) => {
+    // Por enquanto apenas mostra um toast informativo
+    toast({
+      title: "Editar sessão",
+      description: "Funcionalidade em desenvolvimento",
+    });
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("sessions")
+        .delete()
+        .eq("id", sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sessão removida com sucesso!",
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover sessão",
+        description: error.message,
+      });
+    }
+  };
+
   return {
     sessions,
     isLoading,
@@ -145,5 +176,7 @@ export function useSessionsData() {
     handleCreateSession,
     handleUpdateTrunkAmount,
     handleFileUpload,
+    handleEditSession,
+    handleDeleteSession,
   };
 }

@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { UserCheck } from "lucide-react";
+import { Edit, Trash, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Session } from "@/types/session";
 import {
@@ -24,6 +24,8 @@ interface SessionsTableProps {
   onUpdateTrunk: (id: string, amount: string) => void;
   onCancelEdit: () => void;
   onFileUpload: (sessionId: string, file: File) => void;
+  onEditSession: (session: Session) => void;
+  onDeleteSession: (sessionId: string) => void;
 }
 
 export function SessionsTable({
@@ -35,6 +37,8 @@ export function SessionsTable({
   onUpdateTrunk,
   onCancelEdit,
   onFileUpload,
+  onEditSession,
+  onDeleteSession,
 }: SessionsTableProps) {
   const getDegreeLabel = (degree: string) => {
     switch (degree) {
@@ -85,13 +89,13 @@ export function SessionsTable({
                 {session.agenda}
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onSelectSession(session)}
                   >
-                    <UserCheck className="h-4 w-4 mr-2" />
+                    <UserCheck className="h-4 w-4" />
                     Presenças
                   </Button>
                   {session.minutes_url ? (
@@ -110,6 +114,20 @@ export function SessionsTable({
                       onFileSelect={(file) => onFileUpload(session.id, file)}
                     />
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditSession(session)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteSession(session.id)}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>

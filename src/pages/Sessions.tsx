@@ -22,6 +22,8 @@ const Sessions = () => {
     handleCreateSession,
     handleUpdateTrunkAmount,
     handleFileUpload,
+    handleEditSession,
+    handleDeleteSession,
   } = useSessionsData();
 
   if (isLoading) {
@@ -65,6 +67,8 @@ const Sessions = () => {
           onUpdateTrunk={handleUpdateTrunkAmount}
           onCancelEdit={() => setEditingTrunkId(null)}
           onFileUpload={handleFileUpload}
+          onEditSession={handleEditSession}
+          onDeleteSession={handleDeleteSession}
         />
       ) : (
         <div className="text-center py-8 text-muted-foreground">
@@ -87,6 +91,6 @@ const Sessions = () => {
       )}
     </div>
   );
-};
+}
 
 export default Sessions;

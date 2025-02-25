@@ -63,6 +63,14 @@ export function CreatePollForm() {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      // Obter o usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar autenticado para criar uma enquete");
+        return;
+      }
+
       // Inserir a enquete
       const { data: poll, error: pollError } = await supabase
         .from("polls")
@@ -71,6 +79,7 @@ export function CreatePollForm() {
           description: values.description,
           type: values.type,
           auto_close_at: values.autoCloseAt || null,
+          created_by: user.id, // Adicionando o ID do usuário criador
         })
         .select()
         .single();

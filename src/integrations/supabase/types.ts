@@ -208,6 +208,78 @@ export type Database = {
           },
         ]
       }
+      poll_options: {
+        Row: {
+          created_at: string
+          id: string
+          poll_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          poll_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          poll_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "poll_results"
+            referencedColumns: ["poll_id"]
+          },
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          auto_close_at: string | null
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          status: Database["public"]["Enums"]["poll_status"]
+          title: string
+          type: Database["public"]["Enums"]["poll_type"]
+        }
+        Insert: {
+          auto_close_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          status?: Database["public"]["Enums"]["poll_status"]
+          title: string
+          type?: Database["public"]["Enums"]["poll_type"]
+        }
+        Update: {
+          auto_close_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          status?: Database["public"]["Enums"]["poll_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["poll_type"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -316,6 +388,59 @@ export type Database = {
         }
         Relationships: []
       }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_results"
+            referencedColumns: ["option_id"]
+          },
+          {
+            foreignKeyName: "votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "poll_results"
+            referencedColumns: ["poll_id"]
+          },
+          {
+            foreignKeyName: "votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       cash_balance: {
@@ -339,11 +464,28 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_results: {
+        Row: {
+          option_id: string | null
+          option_title: string | null
+          poll_id: string | null
+          poll_title: string | null
+          poll_type: Database["public"]["Enums"]["poll_type"] | null
+          vote_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_monthly_fee: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      close_poll: {
+        Args: {
+          poll_id: string
+        }
+        Returns: undefined
       }
       copy_recurring_movements: {
         Args: Record<PropertyKey, never>
@@ -369,6 +511,8 @@ export type Database = {
         | "other_income"
         | "expense"
       cash_movement_type: "income" | "expense"
+      poll_status: "open" | "closed"
+      poll_type: "public" | "secret"
     }
     CompositeTypes: {
       [_ in never]: never

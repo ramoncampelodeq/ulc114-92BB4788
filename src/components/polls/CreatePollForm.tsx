@@ -40,7 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreatePollForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [options, setOptions] = useState<string[]>([""]);
+  const [options, setOptions] = useState<string[]>(["", ""]);  // Inicializar com duas opções vazias
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -48,17 +48,20 @@ export function CreatePollForm() {
       title: "",
       description: "",
       type: "public",
-      options: [""],
+      options: ["", ""],  // Inicializar com duas opções vazias
     },
   });
 
   const addOption = () => {
-    setOptions([...options, ""]);
+    const newOptions = [...options, ""];
+    setOptions(newOptions);
+    form.setValue("options", newOptions);
   };
 
   const removeOption = (index: number) => {
     const newOptions = options.filter((_, i) => i !== index);
     setOptions(newOptions);
+    form.setValue("options", newOptions);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -79,7 +82,8 @@ export function CreatePollForm() {
           description: values.description,
           type: values.type,
           auto_close_at: values.autoCloseAt || null,
-          created_by: user.id, // Adicionando o ID do usuário criador
+          created_by: user.id,
+          status: 'open'  // Definir status explicitamente
         })
         .select()
         .single();
@@ -184,7 +188,7 @@ export function CreatePollForm() {
                   </FormItem>
                 )}
               />
-              {index > 0 && (
+              {index > 1 && ( // Permitir remoção apenas se houver mais de 2 opções
                 <Button
                   type="button"
                   variant="ghost"

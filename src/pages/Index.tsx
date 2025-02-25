@@ -17,13 +17,16 @@ import {
   UserCheck,
   DollarSign,
   LogOut,
+  Vote,
 } from "lucide-react";
 import BirthdayList from "@/components/brothers/BirthdayList";
 import { Brother, Relative } from "@/types/brother";
+import { Poll } from "@/types/poll";
 
 const Index = () => {
   const navigate = useNavigate();
   const [brothers, setBrothers] = useState<Brother[]>([]);
+  const [openPolls, setOpenPolls] = useState<Poll[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,6 +38,7 @@ const Index = () => {
 
     checkAuth();
     fetchBrothers();
+    fetchOpenPolls();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
@@ -53,7 +57,6 @@ const Index = () => {
       
       if (error) throw error;
       
-      // Mapear os dados do formato do banco para o formato da aplicação
       const formattedBrothers: Brother[] = (data || []).map(brother => ({
         id: brother.id,
         name: brother.name,
@@ -67,13 +70,28 @@ const Index = () => {
           id: relative.id,
           name: relative.name,
           relationship: relative.relationship,
-          birthDate: relative.birth_date // Convertendo birth_date para birthDate
+          birthDate: relative.birth_date
         }))
       }));
       
       setBrothers(formattedBrothers);
     } catch (error) {
       console.error('Error fetching brothers:', error);
+    }
+  };
+
+  const fetchOpenPolls = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('polls')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOpenPolls(data);
+    } catch (error) {
+      console.error('Error fetching open polls:', error);
     }
   };
 
@@ -102,6 +120,12 @@ const Index = () => {
       icon: <DollarSign className="h-8 w-8" />,
       onClick: () => navigate("/treasury"),
     },
+    {
+      title: "Enquetes",
+      description: "Gerenciar e participar de votações",
+      icon: <Vote className="h-8 w-8" />,
+      onClick: () => navigate("/polls"),
+    },
   ];
 
   return (
@@ -129,7 +153,7 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto py-8 px-4 md:px-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {menuItems.map((item) => (
             <Card
               key={item.title}
@@ -149,7 +173,7 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="grid gap-8 mt-8 md:grid-cols-2">
+        <div className="grid gap-8 mt-8 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Atividade Recente</CardTitle>
@@ -166,6 +190,37 @@ const Index = () => {
           <Card>
             <CardContent className="pt-6">
               <BirthdayList brothers={brothers} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Enquetes Abertas</CardTitle>
+              <CardDescription>Votações em andamento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {openPolls.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    Não há enquetes abertas no momento.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {openPolls.map((poll) => (
+                      <div
+                        key={poll.id}
+                        className="p-4 rounded-lg border cursor-pointer hover:bg-accent"
+                        onClick={() => navigate(`/polls/${poll.id}`)}
+                      >
+                        <h3 className="font-medium">{poll.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {poll.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </CardContent>
           </Card>
         </div>

@@ -34,7 +34,6 @@ export function OverdueList() {
           month,
           year,
           due_date,
-          amount,
           status
         `)
         .in('status', ['pending', 'overdue'])
@@ -63,7 +62,7 @@ export function OverdueList() {
         if (allDuesError) console.error("Erro ao buscar amostra:", allDuesError);
       }
 
-      // Agrupar por irmão
+      // Agrupar por irmão usando valor fixo de R$150,00
       const groupedByBrother = (data || []).reduce<Record<string, OverdueBrother>>((acc, payment) => {
         if (!payment.brother_id || !payment.brother) return acc;
 
@@ -84,7 +83,7 @@ export function OverdueList() {
           dueDate: payment.due_date
         });
         acc[key].totalOverdue += 1;
-        acc[key].totalAmount += payment.amount;
+        acc[key].totalAmount += 150; // Valor fixo de R$150,00 por mensalidade
 
         return acc;
       }, {});

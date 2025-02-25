@@ -11,6 +11,7 @@ import Brothers from "./pages/Brothers";
 import Sessions from "./pages/Sessions";
 import Attendance from "./pages/Attendance";
 import Treasury from "./pages/Treasury";
+import Polls from "./pages/Polls";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/treasury" element={<Treasury />} />
+          <Route path="/polls/*" element={<Polls />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

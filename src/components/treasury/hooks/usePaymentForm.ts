@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -19,19 +20,20 @@ export function usePaymentForm() {
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [paidMonths, setPaidMonths] = useState<number[]>([]);
 
+  // Define fetchMonthlyFee outside useEffect so it can be reused
+  const fetchMonthlyFee = async () => {
+    const { data, error } = await supabase.rpc('calculate_monthly_fee');
+    
+    if (error) {
+      console.error('Erro ao buscar valor da mensalidade:', error);
+      return;
+    }
+
+    setAmount(data.toString());
+  };
+
   // Fetch the calculated monthly fee when component mounts
   useEffect(() => {
-    const fetchMonthlyFee = async () => {
-      const { data, error } = await supabase.rpc('calculate_monthly_fee');
-      
-      if (error) {
-        console.error('Erro ao buscar valor da mensalidade:', error);
-        return;
-      }
-
-      setAmount(data.toString());
-    };
-
     fetchMonthlyFee();
   }, []);
 

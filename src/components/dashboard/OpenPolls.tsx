@@ -30,15 +30,15 @@ export function OpenPolls({ polls }: OpenPollsProps) {
               Não há enquetes abertas no momento.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {polls.map((poll) => (
                 <div
                   key={poll.id}
-                  className="p-4 rounded-lg border cursor-pointer hover:bg-accent active:scale-95 transition-all"
+                  className="p-4 rounded-lg border cursor-pointer hover:bg-accent active:scale-95 transition-all touch-manipulation min-h-[72px]"
                   onClick={() => navigate(`/polls/${poll.id}`)}
                 >
-                  <h3 className="font-medium text-base">{poll.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <h3 className="font-medium text-base md:text-lg">{poll.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                     {poll.description}
                   </p>
                 </div>

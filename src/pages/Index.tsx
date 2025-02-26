@@ -87,10 +87,10 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <DashboardHeader />
 
-      <main className="container mx-auto py-6 px-4 md:py-8 md:px-8">
+      <main className="container mx-auto py-4 px-3 md:py-8 md:px-8">
         <DashboardCards />
 
-        <div className="grid gap-6 mt-6 md:grid-cols-3 md:mt-8">
+        <div className="grid gap-4 md:gap-6 mt-4 md:mt-8 grid-cols-1 md:grid-cols-3">
           <RecentActivities />
           
           <Card className="md:col-span-1">

@@ -2,26 +2,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Users,
-  CalendarDays,
-  UserCheck,
-  DollarSign,
-  LogOut,
-  Vote,
-} from "lucide-react";
-import BirthdayList from "@/components/brothers/BirthdayList";
-import { Brother, Relative } from "@/types/brother";
+import { Brother } from "@/types/brother";
 import { Poll } from "@/types/poll";
+import { DashboardHeader } from "@/components/dashboard/Header";
+import { DashboardCards } from "@/components/dashboard/DashboardCards";
+import { RecentActivities } from "@/components/dashboard/RecentActivities";
+import { OpenPolls } from "@/components/dashboard/OpenPolls";
+import BirthdayList from "@/components/brothers/BirthdayList";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -66,7 +54,7 @@ const Index = () => {
         birth_date: brother.birth_date,
         phone: brother.phone,
         higher_degree: brother.higher_degree || undefined,
-        relatives: (brother.relatives || []).map((relative: any): Relative => ({
+        relatives: (brother.relatives || []).map((relative: any) => ({
           id: relative.id,
           name: relative.name,
           relationship: relative.relationship,
@@ -95,134 +83,23 @@ const Index = () => {
     }
   };
 
-  const menuItems = [
-    {
-      title: "Irmãos",
-      description: "Gerenciar cadastro dos irmãos",
-      icon: <Users className="h-8 w-8" />,
-      onClick: () => navigate("/brothers"),
-    },
-    {
-      title: "Sessões",
-      description: "Agendar e gerenciar sessões",
-      icon: <CalendarDays className="h-8 w-8" />,
-      onClick: () => navigate("/sessions"),
-    },
-    {
-      title: "Presenças",
-      description: "Controlar presenças nas sessões",
-      icon: <UserCheck className="h-8 w-8" />,
-      onClick: () => navigate("/attendance"),
-    },
-    {
-      title: "Tesouraria",
-      description: "Gerenciar pagamentos de mensalidades",
-      icon: <DollarSign className="h-8 w-8" />,
-      onClick: () => navigate("/treasury"),
-    },
-    {
-      title: "Enquetes",
-      description: "Gerenciar e participar de votações",
-      icon: <Vote className="h-8 w-8" />,
-      onClick: () => navigate("/polls"),
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="flex h-14 md:h-16 items-center px-4 md:px-8">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
-              alt="ULC 114 Logo" 
-              className="h-8 w-8 md:h-10 md:w-10"
-            />
-            <h1 className="text-xl md:text-2xl font-serif text-primary">ULC 114</h1>
-          </div>
-          <div className="ml-auto flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => supabase.auth.signOut()}
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <main className="container mx-auto py-6 px-4 md:py-8 md:px-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          {menuItems.map((item) => (
-            <Card
-              key={item.title}
-              className="hover:bg-accent transition-colors cursor-pointer active:scale-95"
-              onClick={item.onClick}
-            >
-              <CardHeader>
-                <div className="flex items-center space-x-4">
-                  {item.icon}
-                  <div>
-                    <CardTitle className="text-base md:text-lg">{item.title}</CardTitle>
-                    <CardDescription className="text-sm">{item.description}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+        <DashboardCards />
 
         <div className="grid gap-6 mt-6 md:grid-cols-3 md:mt-8">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg md:text-xl">Atividade Recente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px] md:h-[400px]">
-                <p className="text-muted-foreground text-sm">
-                  Aqui serão exibidas as atividades recentes da loja.
-                </p>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
+          <RecentActivities />
+          
           <Card className="md:col-span-1">
             <CardContent className="pt-6">
               <BirthdayList brothers={brothers} />
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg md:text-xl">Enquetes Abertas</CardTitle>
-              <CardDescription>Votações em andamento</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px] md:h-[400px]">
-                {openPolls.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    Não há enquetes abertas no momento.
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {openPolls.map((poll) => (
-                      <div
-                        key={poll.id}
-                        className="p-4 rounded-lg border cursor-pointer hover:bg-accent active:scale-95 transition-all"
-                        onClick={() => navigate(`/polls/${poll.id}`)}
-                      >
-                        <h3 className="font-medium text-base">{poll.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {poll.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <OpenPolls polls={openPolls} />
         </div>
       </main>
     </div>

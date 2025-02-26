@@ -61,38 +61,73 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
+  
+  /* Melhorias para touch em dispositivos móveis */
+  @media (max-width: 768px) {
+    button, 
+    [role="button"],
+    a {
+      @apply min-h-[44px] min-w-[44px];
+      touch-action: manipulation;
+    }
+
+    input,
+    textarea,
+    select {
+      @apply text-base;
+      font-size: 16px !important; /* Evita zoom automático em iOS */
+    }
+  }
 }
 
+/* Utilitários para tabelas responsivas */
 .data-table {
   @apply w-full border border-border rounded-lg overflow-hidden;
 }
 
+.data-table-container {
+  @apply w-full overflow-x-auto;
+}
+
 .data-table th {
-  @apply bg-muted px-4 py-3 text-left text-sm font-medium text-muted-foreground tracking-wider;
+  @apply bg-muted px-4 py-3 text-left text-sm font-medium text-muted-foreground tracking-wider whitespace-nowrap;
 }
 
 .data-table td {
-  @apply px-4 py-3 whitespace-nowrap text-sm border-t border-border;
+  @apply px-4 py-3 text-sm border-t border-border;
 }
 
 .data-table tr:hover {
   @apply bg-muted/50 transition-colors;
 }
 
+/* Animações suaves */
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Classes utilitárias para layout */
 .page-header {
-  @apply font-serif text-3xl md:text-4xl text-primary dark:text-white mb-8 text-center;
+  @apply font-serif text-2xl md:text-4xl text-primary dark:text-white mb-6 md:mb-8 text-center;
 }
 
 .section-header {
-  @apply font-serif text-2xl text-primary dark:text-white mb-6;
+  @apply font-serif text-xl md:text-2xl text-primary dark:text-white mb-4 md:mb-6;
 }
 
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+  @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
 }
 
 .glass-card {
@@ -100,7 +135,7 @@
 }
 
 .nav-item {
-  @apply px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors;
+  @apply px-3 md:px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors;
 }
 
 .nav-item.active {
@@ -118,4 +153,3 @@
 .form-input {
   @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
-

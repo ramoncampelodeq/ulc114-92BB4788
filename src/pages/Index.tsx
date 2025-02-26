@@ -131,14 +131,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="flex h-16 items-center px-4 md:px-8">
+        <div className="flex h-14 md:h-16 items-center px-4 md:px-8">
           <div className="flex items-center gap-2">
             <img 
               src="/lovable-uploads/6fdc026e-0d67-455d-8b99-b87c27b3a61f.png" 
               alt="ULC 114 Logo" 
-              className="h-10 w-10"
+              className="h-8 w-8 md:h-10 md:w-10"
             />
-            <h1 className="text-2xl font-serif text-primary">ULC 114</h1>
+            <h1 className="text-xl md:text-2xl font-serif text-primary">ULC 114</h1>
           </div>
           <div className="ml-auto flex items-center space-x-4">
             <Button 
@@ -152,20 +152,20 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4 md:px-8">
+      <main className="container mx-auto py-6 px-4 md:py-8 md:px-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {menuItems.map((item) => (
             <Card
               key={item.title}
-              className="hover:bg-accent transition-colors cursor-pointer"
+              className="hover:bg-accent transition-colors cursor-pointer active:scale-95"
               onClick={item.onClick}
             >
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   {item.icon}
                   <div>
-                    <CardTitle>{item.title}</CardTitle>
-                    <CardDescription>{item.description}</CardDescription>
+                    <CardTitle className="text-base md:text-lg">{item.title}</CardTitle>
+                    <CardDescription className="text-sm">{item.description}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -173,35 +173,35 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="grid gap-8 mt-8 md:grid-cols-3">
-          <Card>
+        <div className="grid gap-6 mt-6 md:grid-cols-3 md:mt-8">
+          <Card className="md:col-span-1">
             <CardHeader>
-              <CardTitle>Atividade Recente</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Atividade Recente</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px]">
-                <p className="text-muted-foreground">
+              <ScrollArea className="h-[300px] md:h-[400px]">
+                <p className="text-muted-foreground text-sm">
                   Aqui serão exibidas as atividades recentes da loja.
                 </p>
               </ScrollArea>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="md:col-span-1">
             <CardContent className="pt-6">
               <BirthdayList brothers={brothers} />
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="md:col-span-1">
             <CardHeader>
-              <CardTitle>Enquetes Abertas</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Enquetes Abertas</CardTitle>
               <CardDescription>Votações em andamento</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px]">
+              <ScrollArea className="h-[300px] md:h-[400px]">
                 {openPolls.length === 0 ? (
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Não há enquetes abertas no momento.
                   </p>
                 ) : (
@@ -209,10 +209,10 @@ const Index = () => {
                     {openPolls.map((poll) => (
                       <div
                         key={poll.id}
-                        className="p-4 rounded-lg border cursor-pointer hover:bg-accent"
+                        className="p-4 rounded-lg border cursor-pointer hover:bg-accent active:scale-95 transition-all"
                         onClick={() => navigate(`/polls/${poll.id}`)}
                       >
-                        <h3 className="font-medium">{poll.title}</h3>
+                        <h3 className="font-medium text-base">{poll.title}</h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">
                           {poll.description}
                         </p>

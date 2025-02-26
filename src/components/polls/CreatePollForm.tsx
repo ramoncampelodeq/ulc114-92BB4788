@@ -50,7 +50,8 @@ export function CreatePollForm() {
         return;
       }
 
-      const { data: poll, error: pollError } = await supabase
+      // Primeiro, criar a enquete
+      const { error: pollError } = await supabase
         .from("polls")
         .insert({
           title: values.title,
@@ -59,22 +60,33 @@ export function CreatePollForm() {
           auto_close_at: values.autoCloseAt || null,
           created_by: user.id,
           status: 'open'
-        })
-        .select()
-        .single();
+        });
 
       if (pollError) throw pollError;
 
-      const optionsToInsert = values.options
-        .filter((option) => option.trim() !== "")
-        .map((title) => ({
-          poll_id: poll.id,
-          title,
-        }));
+      // Buscar a enquete recém-criada
+      const { data: newPoll, error: fetchError } = await supabase
+        .from("polls")
+        .select()
+        .eq('title', values.title)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
+      if (fetchError) throw fetchError;
+
+      // Filtrar e inserir as opções
+      const validOptions = values.options.filter(option => option.trim() !== "");
+      
       const { error: optionsError } = await supabase
         .from("poll_options")
-        .insert(optionsToInsert);
+        .insert(
+          validOptions.map(title => ({
+            poll_id: newPoll.id,
+            title: title.trim()
+          }))
+        );
 
       if (optionsError) throw optionsError;
 
